@@ -28,7 +28,7 @@ Numbers with a check digit are only flagged when the check digit is right, so or
 
 ## Accuracy
 
-Measured on two sets of 30 NZ documents. Both were written and marked up by hand by someone who could not see the rules.
+Measured on two sets of 30 NZ documents, both written by an AI model that was never shown the rules. Set 1 comes from a script the model wrote ([`scripts/make_holdout.py`](scripts/make_holdout.py)), which fills each document with generated numbers and records every detail it puts in. Set 2 the model wrote and marked up directly. Text written by people is often messier, so treat the figures as a guide.
 
 **Set 1: the original 30 documents.**
 
