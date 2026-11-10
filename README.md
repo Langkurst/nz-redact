@@ -22,7 +22,7 @@ Paste an email, a note or a spreadsheet. NZ Redact swaps each detail for a numbe
 | Email address | Any email address | `sam@example.co.nz` |
 | Phone number | NZ mobiles, landlines, 0800 and +64 numbers | `021 123 4567` |
 | Street address | A number, a street name and a street type, with suburb, city and postcode | `56 Hinemoa Street, Birkenhead` |
-| Name | After a label such as Name, Patient or Dear, in a name column, or signing off a message. Other likely names are marked Possible. | `Patient: Eru Waaka` |
+| Name | After a label such as Name, Patient or Dear, in a name column, or signing off a message. Other likely names are marked possible. | `Patient: Eru Waaka` |
 
 Numbers with a check digit are only flagged when the check digit is right, so order numbers and prices are left alone.
 
@@ -50,7 +50,7 @@ Measured on two sets of 30 NZ documents. Both were written and marked up by hand
 
 The results for set 1 were known before the work on version 1.1 started. The rules were not tuned on its documents, but that is why set 2 was written.
 
-A name marked Possible in the page is a guess from the word itself, for example a common first name in a sentence. It is switched on, and you can switch it off.
+A name marked possible in the page is a guess from the word itself, for example a common first name in a sentence. It is ticked, so it is removed, and you can untick it.
 
 What it does not catch: about a third of names. Most names are now found, but the ones missed are mostly names in ordinary sentences that are not common first names. Health details written in words, and numbers split across lines or written in words, are not caught either. Always read the redacted copy before you paste it, and use Remove this too for anything it missed.
 
@@ -110,4 +110,4 @@ Free and open source. If it saved you time, you can support my work on [Ko-fi](h
 
 ## Licence
 
-MIT. Made by Christopher Nottle in Auckland. Fonts: Inter, Newsreader and Geist Mono (SIL OFL 1.1). Icons: Lucide (ISC licence).
+MIT. Made by Christopher Nottle in Auckland. Fonts: Atkinson Hyperlegible Next and Geist Mono (SIL OFL 1.1). Icons: Lucide (ISC licence).

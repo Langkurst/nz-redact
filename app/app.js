@@ -1,7 +1,8 @@
 /*
-  NZ Redact page. One document with highlights drawn in place, a findings panel with a switch per
+  NZ Redact page. One document with highlights drawn in place, a Found list with a checkbox per
   item, a redacted copy with numbered placeholders, and a step that puts the real details back into
   an AI's answer. Everything stays in this tab: nothing is sent and nothing is stored.
+  Nothing on the page moves unless the visitor did something.
 */
 (function () {
   "use strict";
@@ -50,7 +51,6 @@
   function autosize(t, min) { t.style.height = "auto"; t.style.height = Math.max(t.scrollHeight, min || 352) + "px"; }
 
   function render() {
-    stopIntro();
     var text = input.value;
     // Added text that is no longer in the document is dropped.
     added = added.filter(function (v) { return R.scan(text, { added: [v], types: ["added"] }).length > 0; });
@@ -70,8 +70,7 @@
     var at = 0;
     all.forEach(function (f) {
       marks.appendChild(document.createTextNode(text.slice(at, f.start)));
-      var m = marks.appendChild(el("mark", "hl g-" + R.TYPES[f.type].group + (isMaybe(f) ? " is-maybe" : "") + (kept[keyOf(f)] ? " is-kept" : ""), text.slice(f.start, f.end)));
-      m.dataset.k = keyOf(f);
+      marks.appendChild(el("mark", "hl" + (isMaybe(f) ? " is-maybe" : "") + (kept[keyOf(f)] ? " is-kept" : ""), text.slice(f.start, f.end)));
       at = f.end;
     });
     marks.appendChild(document.createTextNode(text.slice(at) + "\n"));
@@ -80,31 +79,26 @@
     paintRedacted();
     if (copiedText !== null && copiedText !== r.text) { copyNote.textContent = ""; copiedText = null; }
 
-    // Findings, grouped.
+    // The Found list: grouped by kind, one checkbox per detail (ticked means it is removed).
     groupsBox.textContent = "";
     var seen = {};
     var unique = all.filter(function (f) { var k = keyOf(f); if (seen[k]) return false; seen[k] = true; return true; });
     Object.keys(R.GROUPS).forEach(function (g) {
       var list = unique.filter(function (f) { return R.TYPES[f.type].group === g; });
       if (!list.length) return;
-      var section = el("section", "grp g-" + g);
-      var head = el("h3", "grp-head");
-      head.appendChild(el("span", "grp-dot"));
-      head.appendChild(document.createTextNode(R.GROUPS[g]));
-      head.appendChild(el("span", "grp-n", String(list.length)));
-      section.appendChild(head);
+      var section = el("section", "grp");
+      section.appendChild(el("h3", "grp-head", R.GROUPS[g] + " (" + list.length + ")"));
       var ul = el("ul");
       list.forEach(function (f) {
         var k = keyOf(f), isAdded = f.type === "added", on = isAdded || !kept[k];
         var li = el("li", "hit" + (on ? "" : " is-kept"));
-        var body = el("div", "hit-body");
-        var top = el("div", "hit-top");
-        top.appendChild(el("span", "hit-label", R.TYPES[f.type].label));
-        if (on && tokenByKey[k]) top.appendChild(el("span", "tok tok-sm", tokenByKey[k])).dataset.k = k;
-        if (!on) top.appendChild(el("span", "kept-pill", "Left in"));
-        if (isMaybe(f)) top.appendChild(el("span", "maybe-pill", "Possible"));
-        body.appendChild(top);
-        body.appendChild(el("code", "hit-value", f.text));
+        var body = el("span", "hit-body");
+        var line = el("span", "hit-line");
+        line.appendChild(el("span", "hit-value", f.text));
+        if (isMaybe(f)) line.appendChild(el("span", "maybe", "possible"));
+        if (on && tokenByKey[k]) line.appendChild(el("code", "hit-token", tokenByKey[k]));
+        if (!on) line.appendChild(el("span", "kept-note", "left in"));
+        body.appendChild(line);
         body.appendChild(el("span", "hit-why", f.why.charAt(0).toUpperCase() + f.why.slice(1) + "."));
         if (isAdded) {
           // Text the visitor added is never switched off, only taken back out.
@@ -128,47 +122,47 @@
           ul.appendChild(li);
           return;
         }
-        var sw = el("button", "switch");
-        sw.type = "button";
-        sw.setAttribute("role", "switch");
-        sw.setAttribute("aria-checked", String(on));
-        sw.setAttribute("aria-label", "Remove " + R.TYPES[f.type].label + " " + f.text);
-        sw.dataset.key = k;
-        sw.addEventListener("click", function () {
-          if (kept[k]) delete kept[k]; else kept[k] = true;
+        // A real checkbox inside a label, so the whole row can be clicked and Space toggles it.
+        var row = el("label", "hit-row");
+        var box = el("input", "hit-check");
+        box.setAttribute("type", "checkbox");
+        box.checked = on;
+        box.setAttribute("aria-label", "Remove " + R.TYPES[f.type].label + " " + f.text);
+        box.dataset.key = k;
+        box.addEventListener("change", function () {
+          if (box.checked) delete kept[k]; else kept[k] = true;
           render();
           var again = groupsBox.querySelector('[data-key="' + CSS.escape(k) + '"]');
           if (again) again.focus();
         });
-        li.appendChild(body);
-        li.appendChild(sw);
+        row.appendChild(box);
+        row.appendChild(body);
+        li.appendChild(row);
         ul.appendChild(li);
       });
       section.appendChild(ul);
       groupsBox.appendChild(section);
     });
-    if (!unique.length) groupsBox.appendChild(el("p", "side-empty", text ? "Nothing found. Still read it through before you paste it." : "Details appear here as you type."));
+    if (!unique.length) groupsBox.appendChild(el("p", "found-empty", text ? "Nothing found. Still read it through before you paste it." : "Details appear here as you type."));
 
-    var removed = Object.keys(r.map).length;
+    var leftIn = unique.filter(function (f) { return f.type !== "added" && kept[keyOf(f)]; }).length;
     countEl.textContent = String(unique.length);
-    unitEl.textContent = unique.length === 1 ? "detail" : "details";
+    unitEl.textContent = (unique.length === 1 ? "detail" : "details") + " found." + (leftIn ? " " + leftIn + " left in the text." : "");
     charsEl.textContent = plural(text.length, "character", "characters");
-    statusEl.textContent = !text ? "Nothing yet" : removed ? plural(removed, "detail", "details") + " removed" : "Nothing to remove";
-    statusEl.className = "pill" + (removed ? " is-done" : "");
+    statusEl.textContent = "";
     copyRedacted.disabled = !text;
     renderRestore();
   }
 
-  // Redacted copy, with placeholders shown as chips. While peeking, each chip shows its original value instead.
-  // Only the picture changes: the text that gets copied is current.text and is never touched.
+  // Redacted copy, with each placeholder drawn as a black redaction bar. While peeking, each bar shows its
+  // original value instead. Only the picture changes: the text that gets copied is current.text and is never touched.
   function paintRedacted() {
     redactedView.textContent = "";
     if (!input.value) { redactedView.appendChild(el("p", "doc-empty", "Paste text on the Check step first.")); return; }
     current.text.split(/(\[[A-Z_]+_\d+\])/g).forEach(function (part) {
       if (/^\[[A-Z_]+_\d+\]$/.test(part)) {
-        var type = Object.keys(R.TYPES).filter(function (k) { return part.indexOf("[" + R.TYPES[k].token + "_") === 0; })[0];
         var real = peeking && current.map[part];
-        redactedView.appendChild(el("span", "tok g-" + (type ? R.TYPES[type].group : "id") + (real ? " is-peek" : ""), real || part));
+        redactedView.appendChild(el("span", "tok" + (real ? " is-peek" : ""), real || part));
       } else redactedView.appendChild(document.createTextNode(part));
     });
   }
@@ -186,60 +180,6 @@
     copyRestored.disabled = false;
     copyRestored.dataset.text = res.text;
     if (res.unknown.length) restoredView.appendChild(el("p", "doc-note", "Not recognised, left as written: " + res.unknown.join(", ") + "."));
-  }
-
-  // The opening demonstration: an outline draws round each detail the rules found, its highlight fills in, and its
-  // placeholder writes itself into the list. It plays once when the editor comes into view and again on Example,
-  // never with reduced motion, and any change to the text stops it. The look is in app.css (.is-intro).
-  var INTRO_START = 250, INTRO_STEP = 110, INTRO_DRAW = 640, INTRO_HOLD = 700, INTRO_FADE = 520;
-  var introTimer = null, introWatch = null;
-  function stopIntro() {
-    clearTimeout(introTimer);
-    editor.classList.remove("is-intro");
-    editor.classList.remove("is-settled");
-    groupsBox.classList.remove("is-intro");
-  }
-  function canAnimate() {
-    return !!(window.matchMedia && editor.getClientRects) && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-  function playIntro() {
-    stopIntro();
-    if (!canAnimate()) return;
-    if (introWatch) { introWatch.disconnect(); introWatch = null; }
-    var hl =[].slice.call(marks.querySelectorAll("mark.hl")), firstAt = {};
-    hl.forEach(function (m, i) {
-      var d = INTRO_START + i * INTRO_STEP;
-      m.style.setProperty("--d", d + "ms");
-      m.classList.toggle("is-wrapped", m.getClientRects().length > 1);   // an outline only goes round a detail on one line
-      if (!(m.dataset.k in firstAt)) firstAt[m.dataset.k] = d;
-    });
-    [].forEach.call(groupsBox.querySelectorAll(".tok-sm"), function (t) {
-      var d = firstAt[t.dataset.k];
-      t.style.setProperty("--d", (d == null ? INTRO_START : d + INTRO_DRAW - 120) + "ms");
-      t.style.setProperty("--n", String(t.textContent.length));
-    });
-    void editor.offsetWidth;                  // start from the first frame, even when it was already playing
-    editor.classList.add("is-intro");
-    groupsBox.classList.add("is-intro");
-    var end = INTRO_START + Math.max(0, hl.length - 1) * INTRO_STEP + INTRO_DRAW + INTRO_HOLD;
-    introTimer = setTimeout(function () {
-      editor.classList.add("is-settled");     // the outlines fade, then the classes go and the page is in its normal state
-      introTimer = setTimeout(stopIntro, INTRO_FADE);
-    }, end);
-  }
-  function playIntroWhenSeen() {
-    if (!canAnimate()) return;
-    var start = function () {
-      if (!("IntersectionObserver" in window)) return playIntro();
-      introWatch = new IntersectionObserver(function (entries) {
-        if (!entries[0].isIntersecting) return;
-        introWatch.disconnect();
-        introWatch = null;
-        if (input.value === EXAMPLE) playIntro();
-      }, { threshold: 0.4 });
-      introWatch.observe(editor);
-    };
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
   }
 
   // "Remove this too": select words the rules missed and they are removed everywhere they appear.
@@ -293,13 +233,17 @@
   input.addEventListener("keydown", function (e) { if (e.key === "Escape") hideRemove(); });
   window.addEventListener("resize", function () { if (pending) showRemove(); });
 
-  // Steps, with arrow keys between them.
+  // Steps, with arrow keys between them. Only a change of step fades the new panel in (app.css, .is-shown);
+  // the first panel is simply there when the page loads.
   function select(tab) {
     tabs.forEach(function (t) {
-      var on = t === tab;
+      var on = t === tab, panel = $(t.getAttribute("aria-controls"));
+      var changed = on && t.getAttribute("aria-selected") !== "true";
       t.setAttribute("aria-selected", String(on));
       t.tabIndex = on ? 0 : -1;
-      $(t.getAttribute("aria-controls")).hidden = !on;
+      panel.hidden = !on;
+      panel.classList.remove("is-shown");
+      if (changed) { void panel.offsetWidth; panel.classList.add("is-shown"); }
     });
     setPeek(false);
   }
@@ -321,8 +265,9 @@
     var paint = function (words, glyph, ms) {
       label.textContent = words;
       icon.setAttribute("href", "app/icons.svg#" + glyph);
+      if (glyph === "check") button.classList.add("is-copied");
       clearTimeout(copyTimers[id]);
-      copyTimers[id] = setTimeout(function () { label.textContent = COPY_LABELS[id]; icon.setAttribute("href", "app/icons.svg#copy"); }, ms);
+      copyTimers[id] = setTimeout(function () { label.textContent = COPY_LABELS[id]; icon.setAttribute("href", "app/icons.svg#copy"); button.classList.remove("is-copied"); }, ms);
     };
     var done = function (ok) {
       if (!ok) { paint("Select and copy", "copy", 1800); announce("The browser would not copy. Select the text and copy it yourself."); return; }
@@ -458,7 +403,7 @@
   var timer;
   input.addEventListener("input", function () { hideRemove(); hideUndo(); clearTimeout(timer); timer = setTimeout(render, 60); });
   reply.addEventListener("input", function () { hideUndo(); pasteNote.textContent = ""; autosize(reply, 128); renderRestore(); });
-  $("example").addEventListener("click", function () { kept = {}; added = []; hideRemove(); hideUndo(); input.value = EXAMPLE; render(); input.focus(); playIntro(); });
+  $("example").addEventListener("click", function () { kept = {}; added = []; hideRemove(); hideUndo(); input.value = EXAMPLE; render(); input.focus(); });
   $("clear").addEventListener("click", function () {
     var had = input.value || reply.value;
     var before = { input: input.value, reply: reply.value, kept: kept, added: added };
@@ -522,5 +467,4 @@
   reply.value = "Done. I have drafted the refund note for [IRD_1] to account [BANK_ACCOUNT_1], and will confirm by email to [EMAIL_1].";
   autosize(reply, 128);
   renderRestore();
-  playIntroWhenSeen();
 })();

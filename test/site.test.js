@@ -157,24 +157,50 @@ function loadApp(options = {}) {
   return { $, doc, type, select, wait, key, windowFire, all: (node, cls) => node.all((n) => (" " + n.className + " ").includes(" " + cls + " ")) };
 }
 
-test("page: a possible name shows with the Possible badge and a dashed underline, and is switched on by default", async () => {
+// The Found list uses a real checkbox per detail: ticked means it is removed.
+const checkboxOf = (row) => row.all((n) => n.tag === "input" && n.attrs.type === "checkbox")[0];
+const untick = (box) => { box.checked = !box.checked; box.fire("change"); };
+
+test("page: a possible name shows the word possible in grey and a dashed underline, and is ticked by default", async () => {
   const app = loadApp();
   await app.type("Please ask Zephyrine about the invoice, and Patient: Eru Waaka will call.");
   const rows = app.all(app.$("groups"), "hit");
   const row = rows.find((r) => r.textContent.includes("Zephyrine"));
   assert.ok(row, "the possible name is listed");
-  assert.equal(app.all(row, "maybe-pill").length, 1);
-  assert.equal(app.all(row, "maybe-pill")[0].textContent, "Possible");
-  const sw = row.all((n) => n.attrs.role === "switch")[0];
-  assert.equal(sw.attrs["aria-checked"], "true", "on by default");
+  assert.equal(app.all(row, "maybe").length, 1);
+  assert.equal(app.all(row, "maybe")[0].textContent, "possible");
+  const box = checkboxOf(row);
+  assert.equal(box.checked, true, "ticked by default");
+  assert.match(box.attrs["aria-label"], /^Remove Name Zephyrine$/);
   assert.ok(!row.className.includes("is-kept"));
   const sure = rows.find((r) => r.textContent.includes("Eru Waaka"));
-  assert.equal(app.all(sure, "maybe-pill").length, 0, "a sure name has no badge");
+  assert.equal(app.all(sure, "maybe").length, 0, "a sure name has no possible word");
   assert.deepEqual(app.all(app.$("marks"), "is-maybe").map((m) => m.textContent), ["Zephyrine"], "dashed underline only on the possible name");
   assert.ok(!app.$("redacted").textContent.includes("Zephyrine"), "it is removed from the redacted copy");
   assert.match(app.$("redacted").textContent, /\[NAME_1\].*\[NAME_2\]/);
-  sw.fire("click");   // switching it off leaves it in the text
+  untick(box);   // unticking it leaves it in the text
   assert.ok(app.$("redacted").textContent.includes("Zephyrine"));
+});
+
+test("page: the count is a sentence, and it says how many are left in", async () => {
+  const app = loadApp();
+  await app.type("His IRD number is 49-098-576 and he is on 021 123 4567.");
+  assert.equal(app.$("count").textContent + " " + app.$("count-unit").textContent, "2 details found.");
+  untick(checkboxOf(app.all(app.$("groups"), "hit")[0]));
+  assert.equal(app.$("count").textContent + " " + app.$("count-unit").textContent, "2 details found. 1 left in the text.");
+  await app.type("Ring 021 123 4567.");
+  assert.equal(app.$("count").textContent + " " + app.$("count-unit").textContent, "1 detail found.");
+});
+
+test("page: nothing moves on load; a step's panel only fades in after a tab is chosen", async () => {
+  const app = loadApp();
+  assert.ok(!app.$("panel-check").className.includes("is-shown"), "the first panel is simply there");
+  app.$("tab-copy").fire("click");
+  assert.ok(app.$("panel-copy").className.includes("is-shown"));
+  assert.ok(!app.$("panel-check").className.includes("is-shown"));
+  app.$("tab-copy").fire("click");                       // choosing the same tab again does not replay it
+  assert.ok(!app.$("panel-copy").className.includes("is-shown"));
+  assert.ok(!/IntersectionObserver|requestAnimationFrame|\.animate\(|playIntro/.test(read("app/app.js")), "no load-time animation code");
 });
 
 test("page: Remove this too replaces every copy, lists it under Added by you, brings it back in step 3, and can be taken back out", async () => {
@@ -322,8 +348,7 @@ test("peek: the press-and-hold button works for touch, and leaving the step ends
 test("Clear keeps the text for 8 seconds: Undo and Ctrl+Z bring it back, and it expires", async () => {
   const app = loadApp();
   await app.type(EX);
-  const sw = app.all(app.$("groups"), "hit")[0].all((n) => n.attrs.role === "switch")[0];
-  sw.fire("click");                                   // switch one finding off first, to check that comes back too
+  untick(checkboxOf(app.all(app.$("groups"), "hit")[0]));   // untick one finding first, to check that comes back too
   const before = app.$("redacted").textContent;
   assert.equal(app.$("undo-msg").hidden, true, "nothing to undo yet");
   app.$("clear").fire("click");
@@ -438,17 +463,18 @@ test("the shortcut sheet lists every shortcut the page has, and the animation is
   assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.sheet-card \{ transform: none; \}/);
 });
 
-test("a finding switched off stays off while the text is edited, in the list and in the copy", async () => {
+test("a finding unticked stays off while the text is edited, in the list and in the copy", async () => {
   const app = loadApp();
   await app.type(EX);
   const row = () => app.all(app.$("groups"), "hit").find((r) => r.textContent.includes("49-098-576"));
-  row().all((n) => n.attrs.role === "switch")[0].fire("click");
+  untick(checkboxOf(row()));
   assert.ok(app.$("redacted").textContent.includes("49-098-576"), "left in");
   await app.type(EX + " Added a line.");
   await app.type("A new first line. " + EX + " Added a line.");
   assert.ok(app.$("redacted").textContent.includes("49-098-576"), "still left in after edits");
   assert.ok(row().className.includes("is-kept"));
-  assert.equal(row().all((n) => n.attrs.role === "switch")[0].attrs["aria-checked"], "false");
+  assert.equal(checkboxOf(row()).checked, false);
+  assert.equal(app.all(row(), "kept-note")[0].textContent, "left in", "it says left in where the placeholder was");
 });
 
 test("Ko-fi: one footer line with a plain link, no widget or script, and the privacy lines mention it", () => {

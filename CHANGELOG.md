@@ -1,5 +1,16 @@
 # Changelog
 
+## Page update (November 2026)
+
+No change to the rules or the accuracy figures.
+
+- The page is laid out as a text tool: the tool is at the top, under a one-line description, and the explanations follow as plain sections with tables.
+- Found details are marked in highlighter yellow, and placeholders in the redacted copy are shown as redaction bars.
+- Each detail in the Found list has a checkbox. Ticked means it is removed. A guessed name says possible.
+- The typeface is Atkinson Hyperlegible Next, which keeps 0 and O, and 1, l and I apart in IRD and NHI numbers.
+- Nothing moves when the page loads.
+- A Privacy section.
+
 ## 1.1.0 (November 2026)
 
 - Possible names. Names that are not after a label are now found from the word itself, such as a common first name, an initial with a surname, or a name that appears elsewhere in the text. They are marked Possible, switched on by default, and can be switched off. Names found by the sure rules are unchanged.
