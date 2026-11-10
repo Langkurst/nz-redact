@@ -1,0 +1,2463 @@
+[
+  {
+    "id": "d001",
+    "kind": "email",
+    "text": "From: Rebecca Hall <rebecca.hall@example.co.nz>\nSent: Thursday, 6 November 2026 4:52 pm\nTo: Payroll <payroll@example.co.nz>\nSubject: FW: new starter - Sione\n\nHi Rachel,\n\nNew starter for Monday - Sione Taufa. Can you get him set up in payroll pls.\nIRD: 49-091-850\nBank acct 01-0902-0068389-00 (ANZ)\nTax code M, KiwiSaver 3%\nMobile 021 455 0193 / personal email sione.taufa88@example.com\n\nCheers\nBex\n\n-----Original Message-----\nFrom: Sione Taufa <sione.taufa88@example.com>\nSent: Wednesday, 5 November 2026 9:14 pm\nTo: Rebecca Hall\nSubject: new starter\n\nhey Bex, heres my stuff for payroll. sorry took a while, had to find my ird letter lol.\nIRD 49-091-850, ANZ 01-0902-0068389-00\nstart monday 10th, see you at 7:30\nSione\nSent from my iPhone",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Rebecca Hall"
+      },
+      {
+        "type": "email",
+        "value": "rebecca.hall@example.co.nz"
+      },
+      {
+        "type": "name",
+        "value": "Rachel"
+      },
+      {
+        "type": "name",
+        "value": "Sione Taufa"
+      },
+      {
+        "type": "ird",
+        "value": "49-091-850"
+      },
+      {
+        "type": "bank",
+        "value": "01-0902-0068389-00"
+      },
+      {
+        "type": "phone",
+        "value": "021 455 0193"
+      },
+      {
+        "type": "email",
+        "value": "sione.taufa88@example.com"
+      },
+      {
+        "type": "name",
+        "value": "Bex"
+      },
+      {
+        "type": "email",
+        "value": "payroll@example.co.nz"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "7:30",
+        "why": "time"
+      }
+    ],
+    "notes": "Forwarded thread: the IRD and bank number appear twice; labelled once each by value. Dates in the email headers are sent dates, not birth dates."
+  },
+  {
+    "id": "d002",
+    "kind": "slack",
+    "text": "@mere.h quick one, is 060192125 the right IRD for Tane Walker?? payslip run closes at 3",
+    "expected": [
+      {
+        "type": "ird",
+        "value": "060192125"
+      },
+      {
+        "type": "name",
+        "value": "mere.h"
+      },
+      {
+        "type": "name",
+        "value": "Tane Walker"
+      }
+    ],
+    "negatives": [],
+    "notes": "'mere.h' is a Slack handle made from a person's name; labelled as name."
+  },
+  {
+    "id": "d003",
+    "kind": "payroll_note",
+    "text": "PAYROLL - bank change\nEmployee: Priya Raman (emp #10442)\nOld a/c 12-3140-6260209-71 - payment bounced 12/09, bank says acct doesnt exist\nNew a/c 02-0248-3105582-49 confirmed by phone (09) 528 4471\nEffective next pay. Total adj $1,842.60\n",
+    "expected": [
+      {
+        "type": "bank",
+        "value": "02-0248-3105582-49"
+      },
+      {
+        "type": "name",
+        "value": "Priya Raman"
+      },
+      {
+        "type": "phone",
+        "value": "(09) 528 4471"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "12-3140-6260209-71",
+        "why": "bank-looking number with bad checksum (the 'old' account that bounced)"
+      },
+      {
+        "value": "10442",
+        "why": "employee number"
+      },
+      {
+        "value": "1,842.60",
+        "why": "amount"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d004",
+    "kind": "spreadsheet_tsv",
+    "text": "Name\tIRD No\tBank Account\tTax Code\tStart\nLiam O'Connor\t50-313-158\t03-0104-0506671-45\tM\t3/02/2025\nAna Lealaiauloto\t112-204-962\t02-0800-0343132-040\tM SL\t17/02/2025\nHemi Parata\t14-637-045\t11-7800-1688079-76\tS\t24/02/2025\nGrace Kim\t42037095\t030104122347472\tME\t3/03/2025",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Liam O'Connor"
+      },
+      {
+        "type": "ird",
+        "value": "50-313-158"
+      },
+      {
+        "type": "bank",
+        "value": "03-0104-0506671-45"
+      },
+      {
+        "type": "name",
+        "value": "Ana Lealaiauloto"
+      },
+      {
+        "type": "ird",
+        "value": "112-204-962"
+      },
+      {
+        "type": "bank",
+        "value": "02-0800-0343132-040"
+      },
+      {
+        "type": "name",
+        "value": "Hemi Parata"
+      },
+      {
+        "type": "bank",
+        "value": "11-7800-1688079-76"
+      },
+      {
+        "type": "name",
+        "value": "Grace Kim"
+      },
+      {
+        "type": "ird",
+        "value": "42037095"
+      },
+      {
+        "type": "bank",
+        "value": "030104122347472"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "14-637-045",
+        "why": "IRD-looking number with wrong check digit (typo in source sheet)"
+      }
+    ],
+    "notes": "Start dates are employment start dates, not birth dates."
+  },
+  {
+    "id": "d005",
+    "kind": "accounts_payable",
+    "text": "AP query - Kauri Office Supplies Ltd\nPO 4500012904 raised 4 Sept, invoice INV-0042817 received for $2,316.25 incl GST.\nSupplier GST no. 119-463-548. Qty on invoice 48 cartons but GRN shows 40.\nHolding payment until Kauri send a credit note for the 8 short.",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "4500012904",
+        "why": "purchase order number"
+      },
+      {
+        "value": "INV-0042817",
+        "why": "invoice number"
+      },
+      {
+        "value": "2,316.25",
+        "why": "price"
+      },
+      {
+        "value": "48",
+        "why": "quantity"
+      },
+      {
+        "value": "40",
+        "why": "quantity"
+      }
+    ],
+    "notes": "119-463-548 is the supplier company's GST number (checksum-valid as an IRD number) - deliberately unlabelled because it belongs to a company, not a person."
+  },
+  {
+    "id": "d006",
+    "kind": "acc_health_note",
+    "text": "ACC45 lodged for Tipene Rāwiri  NHI ZAA0067  DOB 14/03/1987\nInjury: L wrist sprain at work (warehouse), date of injury 02/10/2026.\nClaim # 10045822371 - follow up physio referral w/ Dr Anjali Mehta.\nPt contact 027 384 1102",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Tipene Rāwiri"
+      },
+      {
+        "type": "nhi",
+        "value": "ZAA0067"
+      },
+      {
+        "type": "dob",
+        "value": "14/03/1987"
+      },
+      {
+        "type": "name",
+        "value": "Dr Anjali Mehta"
+      },
+      {
+        "type": "phone",
+        "value": "027 384 1102"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "10045822371",
+        "why": "ACC claim number (not a target type)"
+      },
+      {
+        "value": "02/10/2026",
+        "why": "date of injury, not a birth date"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d007",
+    "kind": "customer_ticket",
+    "text": "Ticket #88213 - Payment failed\nFrom: j.whitcombe@example.co.nz\n\nhi there i tried to pay my bill 3 times and it keeps failing, card is 4111 1111 1111 1111 exp 08/28. can someone call me on 022 019 8834 thanks\nJo Whitcombe\n56 Hinemoa Street, Birkenhead, Auckland 0626",
+    "expected": [
+      {
+        "type": "card",
+        "value": "4111 1111 1111 1111"
+      },
+      {
+        "type": "email",
+        "value": "j.whitcombe@example.co.nz"
+      },
+      {
+        "type": "phone",
+        "value": "022 019 8834"
+      },
+      {
+        "type": "name",
+        "value": "Jo Whitcombe"
+      },
+      {
+        "type": "address",
+        "value": "56 Hinemoa Street, Birkenhead, Auckland 0626"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "88213",
+        "why": "ticket number"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d008",
+    "kind": "tenancy_application",
+    "text": "TENANCY APPLICATION - 3/18 Bealey Ave\nApplicant 1: Kate Brennan\nDate of birth: 3 July 1994\nDrivers licence: DK482913  version 512\nCurrent address: Flat 2, 37 Rimu Road, Kelburn, Wellington 6012 (2 yrs)\nPh: 021-776-0451   Email: kbrennan@example.com\nEmployer: Southern Cross Logistics, weekly income $1,450\nPets: 1 cat\nReferee: Martin Shaw (previous landlord) (04) 499 3021",
+    "expected": [
+      {
+        "type": "licence",
+        "value": "DK482913"
+      },
+      {
+        "type": "name",
+        "value": "Kate Brennan"
+      },
+      {
+        "type": "dob",
+        "value": "3 July 1994"
+      },
+      {
+        "type": "address",
+        "value": "Flat 2, 37 Rimu Road, Kelburn, Wellington 6012"
+      },
+      {
+        "type": "phone",
+        "value": "021-776-0451"
+      },
+      {
+        "type": "email",
+        "value": "kbrennan@example.com"
+      },
+      {
+        "type": "name",
+        "value": "Martin Shaw"
+      },
+      {
+        "type": "phone",
+        "value": "(04) 499 3021"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "512",
+        "why": "licence version number"
+      },
+      {
+        "value": "1,450",
+        "why": "income amount"
+      },
+      {
+        "value": "3/18 Bealey Ave",
+        "why": "address of the rental property being applied for, not the applicant's"
+      }
+    ],
+    "notes": "'3/18 Bealey Ave' is the advertised rental property (no person lives there in the text) - listed as a negative, though some labellers might count it as an address."
+  },
+  {
+    "id": "d009",
+    "kind": "school_enrolment",
+    "text": "Enrolment - Year 3\nStudent: Mia Tuhiwai   DOB 2018-06-30   NHI: FPB1917\nParent/caregiver: Aroha Tuhiwai - 027 552 9016, aroha.t@example.co.nz\nAddress: 14 Kowhai Street, Te Atatu South, Auckland 0610\nPrevious school: Rutherford Primary. Allergies: peanuts (EpiPen in bag).",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Mia Tuhiwai"
+      },
+      {
+        "type": "dob",
+        "value": "2018-06-30"
+      },
+      {
+        "type": "nhi",
+        "value": "FPB1917"
+      },
+      {
+        "type": "name",
+        "value": "Aroha Tuhiwai"
+      },
+      {
+        "type": "phone",
+        "value": "027 552 9016"
+      },
+      {
+        "type": "email",
+        "value": "aroha.t@example.co.nz"
+      },
+      {
+        "type": "address",
+        "value": "14 Kowhai Street, Te Atatu South, Auckland 0610"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d010",
+    "kind": "teams",
+    "text": "anyone know why PO 4500013377 is still showing unreceipted? it's the 40 x HDMI-2M-BLK cables, should've come in tues",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "4500013377",
+        "why": "purchase order number"
+      },
+      {
+        "value": "40",
+        "why": "quantity"
+      },
+      {
+        "value": "HDMI-2M-BLK",
+        "why": "product code"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d011",
+    "kind": "email",
+    "text": "Subject: RE: Kiwisaver opt out\n\nHi Daniel\nYep got the KS10 form for Ella Fisher, IRD number on it is 73 764 173. It's dated 12 Aug so its inside the 8 week window.\nIll process it this week and refund the deductions ($312.40) back to her nominated account 06 0501 4017857 65.\n\nNgā mihi\nWaimarie",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Daniel"
+      },
+      {
+        "type": "name",
+        "value": "Ella Fisher"
+      },
+      {
+        "type": "ird",
+        "value": "73 764 173"
+      },
+      {
+        "type": "bank",
+        "value": "06 0501 4017857 65"
+      },
+      {
+        "type": "name",
+        "value": "Waimarie"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "312.40",
+        "why": "amount"
+      }
+    ],
+    "notes": "Labelled bank '06 0501 4017857 65' also passes the card checksum."
+  },
+  {
+    "id": "d012",
+    "kind": "slack",
+    "text": "Invoices to chase:\n- INV-20934 Harbourside Cafe $480.00\n- INV-20951 Pukeko Plumbing $1,120.75\n- 71381920 (old system) $96.60",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "INV-20934",
+        "why": "invoice number"
+      },
+      {
+        "value": "480.00",
+        "why": "price"
+      },
+      {
+        "value": "INV-20951",
+        "why": "invoice number"
+      },
+      {
+        "value": "1,120.75",
+        "why": "price"
+      },
+      {
+        "value": "71381920",
+        "why": "invoice number (8 digits, fails IRD check)"
+      },
+      {
+        "value": "96.60",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d013",
+    "kind": "hr_onboarding",
+    "text": "Onboarding checklist - Arjun Patel\n[x] signed IEA\n[x] right to work - NZ passport LA204871 sighted, expiry 2031\n[x] IRD 091-334-941\n[ ] bank details - waiting\n[ ] emergency contact - wife Neha Patel 021 0843 7720\nLaptop asset tag NB-00871",
+    "expected": [
+      {
+        "type": "passport",
+        "value": "LA204871"
+      },
+      {
+        "type": "name",
+        "value": "Arjun Patel"
+      },
+      {
+        "type": "ird",
+        "value": "091-334-941"
+      },
+      {
+        "type": "name",
+        "value": "Neha Patel"
+      },
+      {
+        "type": "phone",
+        "value": "021 0843 7720"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "NB-00871",
+        "why": "asset tag"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d014",
+    "kind": "acc_health_note",
+    "text": "Pt Losa Fifita rang re repeat script - NHI on the referral was ZDN6294 which doesnt match, correct one from NES is SKT4699. d.o.b 21/11/1959. Updated PMS.",
+    "expected": [
+      {
+        "type": "nhi",
+        "value": "SKT4699"
+      },
+      {
+        "type": "name",
+        "value": "Losa Fifita"
+      },
+      {
+        "type": "dob",
+        "value": "21/11/1959"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "ZDN6294",
+        "why": "NHI-looking code with bad check digit"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d015",
+    "kind": "accounts_payable",
+    "text": "AP batch 14 Oct\nSupplier\tInvoice\tPO\tAmount\nMainfreight\tMF-883201\t4500012955\t$3,410.00\nSpark NZ\t7023318845\t-\t$612.35\nOffice Max\tOM90021\t4500012961\t$88.20\nTotal $4,110.55",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "MF-883201",
+        "why": "invoice number"
+      },
+      {
+        "value": "4500012955",
+        "why": "purchase order number"
+      },
+      {
+        "value": "$3,410.00",
+        "why": "price"
+      },
+      {
+        "value": "7023318845",
+        "why": "invoice number"
+      },
+      {
+        "value": "$612.35",
+        "why": "price"
+      },
+      {
+        "value": "OM90021",
+        "why": "invoice number"
+      },
+      {
+        "value": "4500012961",
+        "why": "purchase order number"
+      },
+      {
+        "value": "$88.20",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d016",
+    "kind": "payroll_note",
+    "text": "note to self - B. Thompson ird 21918059 wrong tax code (was ND, should be M). back-calc 3 periods + IR correction via payday filing",
+    "expected": [
+      {
+        "type": "name",
+        "value": "B. Thompson"
+      },
+      {
+        "type": "ird",
+        "value": "21918059"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d017",
+    "kind": "email",
+    "text": "From: Sarah Mitchell <sarah.mitchell@example.co.nz>\nTo: accounts@example.co.nz\nSubject: refund\n\nHello, I was charged twice for order #55219. Please refund to the card I used, ending 4444. If you need to reach me Im on +64 21 339 812 during the day.\n\nThanks\nSarah",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Sarah Mitchell"
+      },
+      {
+        "type": "email",
+        "value": "sarah.mitchell@example.co.nz"
+      },
+      {
+        "type": "phone",
+        "value": "+64 21 339 812"
+      },
+      {
+        "type": "name",
+        "value": "Sarah"
+      },
+      {
+        "type": "email",
+        "value": "accounts@example.co.nz"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "#55219",
+        "why": "order number"
+      },
+      {
+        "value": "4444",
+        "why": "last 4 digits of card only"
+      }
+    ],
+    "notes": "accounts@example.co.nz is a role mailbox; labelled as email because the rule says label every email address."
+  },
+  {
+    "id": "d018",
+    "kind": "spreadsheet_csv",
+    "text": "first_name,last_name,dob,mobile,email\nTom,Hendry,05/01/1990,0211234987,tom.hendry@example.com\nLucy,Ng,1991-12-22,027 600 4312,lucy.ng@example.co.nz\nRawiri,Pomare,9/9/85,029 771 2210,rpomare@example.com",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Tom"
+      },
+      {
+        "type": "name",
+        "value": "Hendry"
+      },
+      {
+        "type": "dob",
+        "value": "05/01/1990"
+      },
+      {
+        "type": "phone",
+        "value": "0211234987"
+      },
+      {
+        "type": "email",
+        "value": "tom.hendry@example.com"
+      },
+      {
+        "type": "name",
+        "value": "Lucy"
+      },
+      {
+        "type": "name",
+        "value": "Ng"
+      },
+      {
+        "type": "dob",
+        "value": "1991-12-22"
+      },
+      {
+        "type": "phone",
+        "value": "027 600 4312"
+      },
+      {
+        "type": "email",
+        "value": "lucy.ng@example.co.nz"
+      },
+      {
+        "type": "name",
+        "value": "Rawiri"
+      },
+      {
+        "type": "name",
+        "value": "Pomare"
+      },
+      {
+        "type": "dob",
+        "value": "9/9/85"
+      },
+      {
+        "type": "phone",
+        "value": "029 771 2210"
+      },
+      {
+        "type": "email",
+        "value": "rpomare@example.com"
+      }
+    ],
+    "negatives": [],
+    "notes": "Names split across first_name/last_name columns, labelled per cell. dob column header marks the dates as birth dates."
+  },
+  {
+    "id": "d019",
+    "kind": "slack",
+    "text": "lol the scanner read the barcode as 4007635066209975 again, thats not a card number its the carton label. ignore the alert",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "4007635066209975",
+        "why": "16-digit number failing Luhn (barcode misread)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d020",
+    "kind": "customer_ticket",
+    "text": "Live chat transcript\nAgent: Hi, how can I help?\nCustomer: hey my name's Corey Banks i want to update my payment card\nAgent: No problem, please use the secure link I've sent - don't type card numbers into chat\nCustomer: too late lol its 5555 5555 5555 4444\nAgent: I'll mask that message now. Please cancel that card with your bank.",
+    "expected": [
+      {
+        "type": "card",
+        "value": "5555 5555 5555 4444"
+      },
+      {
+        "type": "name",
+        "value": "Corey Banks"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d021",
+    "kind": "tenancy_application",
+    "text": "Hi Linda, following up on the application for 42 Fenton Street. Applicants are Josh Turner (born 12.11.1998) and Amelia Turner. Josh's licence no is FH203948. Bond to be paid from 03-1702-3284269-20. Their current place is 8 Tui Place, Hamilton East, Hamilton 3216. Call 07-838 1123 if anything missing",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Linda"
+      },
+      {
+        "type": "name",
+        "value": "Josh Turner"
+      },
+      {
+        "type": "dob",
+        "value": "12.11.1998"
+      },
+      {
+        "type": "name",
+        "value": "Amelia Turner"
+      },
+      {
+        "type": "licence",
+        "value": "FH203948"
+      },
+      {
+        "type": "bank",
+        "value": "03-1702-3284269-20"
+      },
+      {
+        "type": "address",
+        "value": "8 Tui Place, Hamilton East, Hamilton 3216"
+      },
+      {
+        "type": "phone",
+        "value": "07-838 1123"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "42 Fenton Street",
+        "why": "rental property address being applied for"
+      }
+    ],
+    "notes": "'42 Fenton Street' is the rental property being applied for, listed as a negative; the applicants' own current address is labelled."
+  },
+  {
+    "id": "d022",
+    "kind": "teams",
+    "text": "Stocktake variances wk 41\nXR204511  -3\nBT550982  +12\nKLM4471  0\npls recount the first two before friday",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "XR204511",
+        "why": "product SKU (2 letters + 6 digits, no licence context)"
+      },
+      {
+        "value": "BT550982",
+        "why": "product SKU (2 letters + 6 digits, no licence context)"
+      },
+      {
+        "value": "KLM4471",
+        "why": "product code"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d023",
+    "kind": "hr_onboarding",
+    "text": "NEW EMPLOYEE FORM\nFull name: Hēmi Te Awa\nD.O.B: 21st Feb 1979\nHome address: 221 Riccarton Road, Riccarton, Christchurch 8041\nPhone: 03 366 0021  Mobile: 0274 412 889\nIRD #: 145-268-907\nBank: 0605011948360086\nEmergency contact: Mere Te Awa (sister) 022 581 3307\nPosition: Store Manager  Grade G7\nStart date: 17/11/2026\nSalary: $72,500 pa\nHours: 40 per week, rostered\nKiwiSaver: member, 4%\nStudent loan: no\nDrivers licence: GT508812 (class 1)\nUniform size: L\nMedical conditions: none disclosed\n-----\nOffice use: entered in payroll by R. Singh on 12/11/2026\nManager sign-off: Debbie Lawson",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Hēmi Te Awa"
+      },
+      {
+        "type": "dob",
+        "value": "21st Feb 1979"
+      },
+      {
+        "type": "address",
+        "value": "221 Riccarton Road, Riccarton, Christchurch 8041"
+      },
+      {
+        "type": "phone",
+        "value": "03 366 0021"
+      },
+      {
+        "type": "phone",
+        "value": "0274 412 889"
+      },
+      {
+        "type": "ird",
+        "value": "145-268-907"
+      },
+      {
+        "type": "bank",
+        "value": "0605011948360086"
+      },
+      {
+        "type": "name",
+        "value": "Mere Te Awa"
+      },
+      {
+        "type": "phone",
+        "value": "022 581 3307"
+      },
+      {
+        "type": "licence",
+        "value": "GT508812"
+      },
+      {
+        "type": "name",
+        "value": "R. Singh"
+      },
+      {
+        "type": "name",
+        "value": "Debbie Lawson"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "G7",
+        "why": "pay grade"
+      },
+      {
+        "value": "72,500",
+        "why": "salary amount"
+      }
+    ],
+    "notes": "Start date and office-use dates are not birth dates."
+  },
+  {
+    "id": "d024",
+    "kind": "email",
+    "text": "hey Kiri\n\nmum's details for the travel insurance form:\nMargaret Ellis\nborn Mar 5 1954\npassport RA402331\naddress unit 5/112 Great South Rd, Papatoetoe, Auckland 2025\npolicy quote was $284.00\n\nx Jen",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Kiri"
+      },
+      {
+        "type": "name",
+        "value": "Margaret Ellis"
+      },
+      {
+        "type": "dob",
+        "value": "Mar 5 1954"
+      },
+      {
+        "type": "passport",
+        "value": "RA402331"
+      },
+      {
+        "type": "address",
+        "value": "unit 5/112 Great South Rd, Papatoetoe, Auckland 2025"
+      },
+      {
+        "type": "name",
+        "value": "Jen"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "284.00",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d025",
+    "kind": "payroll_note",
+    "text": "Student loan deduction query - Ngaire Whaanga 79-621-811\nSL rate 12% over threshold. Gross $2,140.00 fortnight, threshold $24,128 pa.\nIR asked for SLCIR form, sent 7/10.",
+    "expected": [
+      {
+        "type": "ird",
+        "value": "79-621-811"
+      },
+      {
+        "type": "name",
+        "value": "Ngaire Whaanga"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "2,140.00",
+        "why": "pay amount"
+      },
+      {
+        "value": "24,128",
+        "why": "threshold amount"
+      },
+      {
+        "value": "7/10",
+        "why": "date (not birth)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d026",
+    "kind": "spreadsheet_tsv",
+    "text": "PO\tLine\tItem\tQty\tUnit\tTotal\n4500012904\t1\tPAP-A4-80\t120\t6.95\t834.00\n4500012904\t2\tTNR-HP-410X\t4\t189.00\t756.00\n4500013012\t1\tCHR-ERG-02\t2\t449.00\t898.00",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "4500012904",
+        "why": "purchase order number"
+      },
+      {
+        "value": "PAP-A4-80",
+        "why": "product code"
+      },
+      {
+        "value": "120",
+        "why": "quantity"
+      },
+      {
+        "value": "TNR-HP-410X",
+        "why": "product code"
+      },
+      {
+        "value": "4500013012",
+        "why": "purchase order number"
+      },
+      {
+        "value": "CHR-ERG-02",
+        "why": "product code"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d027",
+    "kind": "slack",
+    "text": "jess: whats Matiu's mobile again\ntom: 0215550192\njess: ta",
+    "expected": [
+      {
+        "type": "name",
+        "value": "jess"
+      },
+      {
+        "type": "name",
+        "value": "Matiu"
+      },
+      {
+        "type": "name",
+        "value": "tom"
+      },
+      {
+        "type": "phone",
+        "value": "0215550192"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d028",
+    "kind": "accounts_payable",
+    "text": "New supplier setup - Coastline Signage Ltd\nBank: 06-0501-3764756-025 (verified on letterhead + called back on 0800 number)\nGST 113-425-288\nContact: Gary Doyle gary@example.co.nz\nPayment terms 20th of month following.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Gary Doyle"
+      },
+      {
+        "type": "email",
+        "value": "gary@example.co.nz"
+      }
+    ],
+    "negatives": [],
+    "notes": "06-0501-3764756-025 is the supplier company's bank account and GST 113-425-288 is the company's GST number - both checksum-valid but deliberately unlabelled as company (not personal) details. Gary Doyle's name and email are labelled."
+  },
+  {
+    "id": "d029",
+    "kind": "teams",
+    "text": "can you ring Mrs Kaur back on 09 263 7740, she's asked twice about the refund",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Mrs Kaur"
+      },
+      {
+        "type": "phone",
+        "value": "09 263 7740"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d030",
+    "kind": "school_enrolment",
+    "text": "ENROLMENT FORM (typed up from paper)\nchild surname: FALEOLO  first names: Junior Ioane\ndate of birth 4-3-2019  gender M\nNHI ZZZ0016\nmother Tasi Faleolo ph 020 4093 1187\nfather Ioane Faleolo ph 021 998 3402\nhome 27 Mahia Road, Manurewa, Auckland 2102\nroom 12 / teacher Ms Huang",
+    "expected": [
+      {
+        "type": "name",
+        "value": "FALEOLO"
+      },
+      {
+        "type": "name",
+        "value": "Junior Ioane"
+      },
+      {
+        "type": "dob",
+        "value": "4-3-2019"
+      },
+      {
+        "type": "nhi",
+        "value": "ZZZ0016"
+      },
+      {
+        "type": "name",
+        "value": "Tasi Faleolo"
+      },
+      {
+        "type": "phone",
+        "value": "020 4093 1187"
+      },
+      {
+        "type": "name",
+        "value": "Ioane Faleolo"
+      },
+      {
+        "type": "phone",
+        "value": "021 998 3402"
+      },
+      {
+        "type": "address",
+        "value": "27 Mahia Road, Manurewa, Auckland 2102"
+      },
+      {
+        "type": "name",
+        "value": "Ms Huang"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "12",
+        "why": "classroom number"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d031",
+    "kind": "email",
+    "text": "Hi team,\n\nReminder the Q3 GST return is due 28 October. Total sales $412,880.17, GST on sales $53,854.80.\nPlease have all receipts coded by Friday. Xero ref BR-2210-77.\n\nFinance",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "412,880.17",
+        "why": "amount"
+      },
+      {
+        "value": "53,854.80",
+        "why": "amount"
+      },
+      {
+        "value": "BR-2210-77",
+        "why": "reference code"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d032",
+    "kind": "customer_ticket",
+    "text": "caller Peter Vu read out card 4080157306876577 to agent before agent could stop him. agent did NOT process. advised caller to cancel card. call ref CR-554210",
+    "expected": [
+      {
+        "type": "card",
+        "value": "4080157306876577"
+      },
+      {
+        "type": "name",
+        "value": "Peter Vu"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "CR-554210",
+        "why": "call reference"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d033",
+    "kind": "hr_onboarding",
+    "text": "hi Steph - for Jordan Lee's police vetting we need ID, I have his DL EJ771045 and his passport (N482019) scanned, saved to the HR drive. His dob is 17/08/2001",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Steph"
+      },
+      {
+        "type": "name",
+        "value": "Jordan Lee"
+      },
+      {
+        "type": "licence",
+        "value": "EJ771045"
+      },
+      {
+        "type": "passport",
+        "value": "N482019"
+      },
+      {
+        "type": "dob",
+        "value": "17/08/2001"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d034",
+    "kind": "spreadsheet_csv",
+    "text": "date,ref,description,debit,credit\n01/10/2026,DD-118230,Spark broadband,89.99,\n03/10/2026,POS 4471,Countdown,,\n04/10/2026,TFR 20019,Owner drawings,500.00,\n05/10/2026,733818615,Customer payment,,1240.00",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "DD-118230",
+        "why": "bank transaction reference"
+      },
+      {
+        "value": "POS 4471",
+        "why": "EFTPOS terminal reference"
+      },
+      {
+        "value": "TFR 20019",
+        "why": "transfer reference"
+      },
+      {
+        "value": "733818615",
+        "why": "bank statement reference number (9 digits, fails IRD check)"
+      }
+    ],
+    "notes": "Transaction dates are not birth dates."
+  },
+  {
+    "id": "d035",
+    "kind": "acc_health_note",
+    "text": "Discharge summary sent to GP for William Tane (ZAC5361), DOB 02/04/1948. Family contact: son Rob Tane 027 118 4450. Home: 3 Kereru Lane, Taupō 3330",
+    "expected": [
+      {
+        "type": "name",
+        "value": "William Tane"
+      },
+      {
+        "type": "nhi",
+        "value": "ZAC5361"
+      },
+      {
+        "type": "dob",
+        "value": "02/04/1948"
+      },
+      {
+        "type": "name",
+        "value": "Rob Tane"
+      },
+      {
+        "type": "phone",
+        "value": "027 118 4450"
+      },
+      {
+        "type": "address",
+        "value": "3 Kereru Lane, Taupō 3330"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d036",
+    "kind": "payroll_note",
+    "text": "Pay run PR-2026-21 summary: 63 employees, gross $148,203.55, PAYE $31,872.10, KS employer $4,446.11. Filed via payday filing 09/10.",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "PR-2026-21",
+        "why": "pay run reference"
+      },
+      {
+        "value": "63",
+        "why": "headcount"
+      },
+      {
+        "value": "148,203.55",
+        "why": "amount"
+      },
+      {
+        "value": "31,872.10",
+        "why": "amount"
+      },
+      {
+        "value": "4,446.11",
+        "why": "amount"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d037",
+    "kind": "slack",
+    "text": "@channel the new starter Fatima Ali needs her bank added before thurs: 06 0501 4054148-49. (she sent it twice, first one was 03-0104-2568597-082 which is wrong)",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Fatima Ali"
+      },
+      {
+        "type": "bank",
+        "value": "06 0501 4054148-49"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "03-0104-2568597-082",
+        "why": "bank-looking number with bad checksum (typo)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d038",
+    "kind": "tenancy_application",
+    "text": "Pre-tenancy check notes\n- Dylan Reid, licence AB123456 verified against photo, NZ passport LB771203 also sighted\n- credit check ref CC-77120 clear\n- prev landlord Sue Harper said rent always on time, contact +64 9 445 2201\n- current addr 19 Ponsonby Terrace, Ponsonby, Auckland 1011",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Dylan Reid"
+      },
+      {
+        "type": "licence",
+        "value": "AB123456"
+      },
+      {
+        "type": "passport",
+        "value": "LB771203"
+      },
+      {
+        "type": "name",
+        "value": "Sue Harper"
+      },
+      {
+        "type": "phone",
+        "value": "+64 9 445 2201"
+      },
+      {
+        "type": "address",
+        "value": "19 Ponsonby Terrace, Ponsonby, Auckland 1011"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "CC-77120",
+        "why": "credit check reference"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d039",
+    "kind": "email",
+    "text": "Subject: tax refund for my son\n\nHi, my son Callum Price worked over summer and I think he's owed a refund. His IRD is 136-410-132 and his bank is 38-9000-9868918-093. Could you check if anything else is needed? He was born 2008-01-19 so he's still 18.\n\nRegards,\nFiona Price\n(03) 477 9012",
+    "expected": [
+      {
+        "type": "ird",
+        "value": "136-410-132"
+      },
+      {
+        "type": "name",
+        "value": "Callum Price"
+      },
+      {
+        "type": "bank",
+        "value": "38-9000-9868918-093"
+      },
+      {
+        "type": "dob",
+        "value": "2008-01-19"
+      },
+      {
+        "type": "name",
+        "value": "Fiona Price"
+      },
+      {
+        "type": "phone",
+        "value": "(03) 477 9012"
+      }
+    ],
+    "negatives": [],
+    "notes": "Labelled bank '38-9000-9868918-093' also passes the card checksum."
+  },
+  {
+    "id": "d040",
+    "kind": "customer_ticket",
+    "text": "Customer A. Sharma asharma@example.com: parcel NZ8829014417 delivered to wrong address. Should have gone to 45 Domain Road, Whakatāne 3120.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "A. Sharma"
+      },
+      {
+        "type": "email",
+        "value": "asharma@example.com"
+      },
+      {
+        "type": "address",
+        "value": "45 Domain Road, Whakatāne 3120"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "NZ8829014417",
+        "why": "courier tracking number"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d041",
+    "kind": "accounts_payable",
+    "text": "Invoice from Tidy Gardens rejected - GST number on invoice 129-207-885 doesn't validate, asked them to reissue. Inv TG-1043 $575.00",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "129-207-885",
+        "why": "IRD-looking supplier GST number with wrong check digit"
+      },
+      {
+        "value": "TG-1043",
+        "why": "invoice number"
+      },
+      {
+        "value": "575.00",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d042",
+    "kind": "hr_onboarding",
+    "text": "Welcome Nikau! Your buddy for the first week is Charlotte Wu (c.wu@example.co.nz). Parking is in the back lot, swipe card at reception.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Nikau"
+      },
+      {
+        "type": "name",
+        "value": "Charlotte Wu"
+      },
+      {
+        "type": "email",
+        "value": "c.wu@example.co.nz"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d043",
+    "kind": "spreadsheet_tsv",
+    "text": "Student\tCaregiver\tPhone\tEmail\tAddress\nOlivia Brown\tKaren Brown\t021 404 8812\tkarenb@example.com\t9 Matai Street, Riccarton, Christchurch 8011\nTe Ariki Hohaia\tRuth Hohaia\t027-339-0021\truth.hohaia@example.co.nz\t88 Ruapehu Drive, Fitzherbert, Palmerston North 4410\nZoe Clarke\tBen Clarke\t022 765 0198\tbenclarke@example.com\t\"4 Harbour View Road,\nTe Puru 3575\"",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Olivia Brown"
+      },
+      {
+        "type": "name",
+        "value": "Karen Brown"
+      },
+      {
+        "type": "phone",
+        "value": "021 404 8812"
+      },
+      {
+        "type": "email",
+        "value": "karenb@example.com"
+      },
+      {
+        "type": "address",
+        "value": "9 Matai Street, Riccarton, Christchurch 8011"
+      },
+      {
+        "type": "name",
+        "value": "Te Ariki Hohaia"
+      },
+      {
+        "type": "name",
+        "value": "Ruth Hohaia"
+      },
+      {
+        "type": "phone",
+        "value": "027-339-0021"
+      },
+      {
+        "type": "email",
+        "value": "ruth.hohaia@example.co.nz"
+      },
+      {
+        "type": "address",
+        "value": "88 Ruapehu Drive, Fitzherbert, Palmerston North 4410"
+      },
+      {
+        "type": "name",
+        "value": "Zoe Clarke"
+      },
+      {
+        "type": "name",
+        "value": "Ben Clarke"
+      },
+      {
+        "type": "phone",
+        "value": "022 765 0198"
+      },
+      {
+        "type": "email",
+        "value": "benclarke@example.com"
+      },
+      {
+        "type": "address",
+        "value": "4 Harbour View Road,\nTe Puru 3575"
+      }
+    ],
+    "negatives": [],
+    "notes": "Row 3's address contains a line break inside a quoted cell, as Excel pastes it."
+  },
+  {
+    "id": "d044",
+    "kind": "payroll_note",
+    "text": "PAYE - IR330 rec'd for michelle mcdonald, ird no 041580208, tax code M SL. her bank 12 3140 2035406 95. start date 17 nov",
+    "expected": [
+      {
+        "type": "name",
+        "value": "michelle mcdonald"
+      },
+      {
+        "type": "ird",
+        "value": "041580208"
+      },
+      {
+        "type": "bank",
+        "value": "12 3140 2035406 95"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d045",
+    "kind": "acc_health_note",
+    "text": "Phone triage 10:42am. Caller Shane Wilson 021 667 2093 re daughter Ruby Wilson (birthday 30/09/2016, NHI CCS9161) - fever 39.1 since last night. Booked 2:15pm with nurse.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Shane Wilson"
+      },
+      {
+        "type": "phone",
+        "value": "021 667 2093"
+      },
+      {
+        "type": "name",
+        "value": "Ruby Wilson"
+      },
+      {
+        "type": "dob",
+        "value": "30/09/2016"
+      },
+      {
+        "type": "nhi",
+        "value": "CCS9161"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "10:42am",
+        "why": "time"
+      },
+      {
+        "value": "2:15pm",
+        "why": "time"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d046",
+    "kind": "customer_ticket",
+    "text": "Customer Hannah Ruru says the card on file is wrong. Old card on file: 5551 0950 1513 5432 (wouldn't save), new card: 5594 3544 4293 2143. Advised her not to send card numbers by email in future.",
+    "expected": [
+      {
+        "type": "card",
+        "value": "5594 3544 4293 2143"
+      },
+      {
+        "type": "name",
+        "value": "Hannah Ruru"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "5551 0950 1513 5432",
+        "why": "16-digit card-looking number failing Luhn (customer typo)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d047",
+    "kind": "tenancy_application",
+    "text": "Applicant ID checklist\nName ............ Siaosi Lemalu\nDOB ............. 11 / 05 / 1989\nID type ......... NZ passport\nPassport no ..... LH900213\nMobile .......... +6421 448 902\nWeekly rent ..... $620",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Siaosi Lemalu"
+      },
+      {
+        "type": "dob",
+        "value": "11 / 05 / 1989"
+      },
+      {
+        "type": "passport",
+        "value": "LH900213"
+      },
+      {
+        "type": "phone",
+        "value": "+6421 448 902"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "620",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d048",
+    "kind": "school_enrolment",
+    "text": "Kia ora Mrs Henare, we've received the enrolment for Kahu. Could you please confirm his date of birth - the form says 31/02/2017 which can't be right. Also his NHI number ZZZ0024 - is that from the Plunket book?",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Mrs Henare"
+      },
+      {
+        "type": "name",
+        "value": "Kahu"
+      },
+      {
+        "type": "dob",
+        "value": "31/02/2017"
+      },
+      {
+        "type": "nhi",
+        "value": "ZZZ0024"
+      }
+    ],
+    "negatives": [],
+    "notes": "31/02/2017 is an impossible calendar date but is still written as a birth date, so it is labelled dob."
+  },
+  {
+    "id": "d049",
+    "kind": "spreadsheet_csv",
+    "text": "sku,desc,qty_on_hand,reorder_pt,unit_cost\nABC1234,Widget small,140,50,2.10\nMNP5520,Widget large,62,40,3.85\nQRS0002,Bracket,1200,500,0.42",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "ABC1234",
+        "why": "product code shaped like an NHI (3 letters + 4 digits) - fails NHI check"
+      },
+      {
+        "value": "MNP5520",
+        "why": "product code shaped like an NHI - fails NHI check"
+      },
+      {
+        "value": "QRS0002",
+        "why": "product code shaped like an NHI - fails NHI check"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d050",
+    "kind": "accounts_payable",
+    "text": "Expense claim - Grant Hollis\nTaxi to airport $64.50, accom $219.00, meals $71.30\nReimburse to 02-0248-6966382-41",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Grant Hollis"
+      },
+      {
+        "type": "bank",
+        "value": "02-0248-6966382-41"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "64.50",
+        "why": "price"
+      },
+      {
+        "value": "219.00",
+        "why": "price"
+      },
+      {
+        "value": "71.30",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d051",
+    "kind": "email",
+    "text": "Hi Tom, can u send the contract to Leilani at leilani.k@example.com not her old work one. thx",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Tom"
+      },
+      {
+        "type": "name",
+        "value": "Leilani"
+      },
+      {
+        "type": "email",
+        "value": "leilani.k@example.com"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d052",
+    "kind": "slack",
+    "text": "pasting the reject report from the payroll import:\nrow 4  IRD 50387438  INVALID CHECK DIGIT\nrow 9  IRD 75738447  OK  (Wiremu Kingi)\nrow 11 BANK 123015486168877  INVALID",
+    "expected": [
+      {
+        "type": "ird",
+        "value": "75738447"
+      },
+      {
+        "type": "name",
+        "value": "Wiremu Kingi"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "50387438",
+        "why": "IRD-looking number with wrong check digit (import reject)"
+      },
+      {
+        "value": "123015486168877",
+        "why": "bank-looking number with bad checksum (import reject)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d053",
+    "kind": "hr_onboarding",
+    "text": "Contractor onboarding\nname - Lukas Schmidt\nvisa - work visa, passport (German) C01X00T47\nNZ IRD - 43-864-823\nbank - 01-0902-7612859-14\nstart - 01/12/2026, rate $95/hr",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Lukas Schmidt"
+      },
+      {
+        "type": "ird",
+        "value": "43-864-823"
+      },
+      {
+        "type": "bank",
+        "value": "01-0902-7612859-14"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "C01X00T47",
+        "why": "foreign passport number - not an NZ passport format"
+      },
+      {
+        "value": "95",
+        "why": "hourly rate"
+      }
+    ],
+    "notes": "German passport number is not in the NZ passport format and is listed as a negative for the passport type; a stricter labeller might still treat it as personal data."
+  },
+  {
+    "id": "d054",
+    "kind": "acc_health_note",
+    "text": "rang Mrs Teina to remind re bloods tmrw - no answer, left vm on 07 345 2290",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Mrs Teina"
+      },
+      {
+        "type": "phone",
+        "value": "07 345 2290"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d055",
+    "kind": "spreadsheet_tsv",
+    "text": "Driver register\nEmployee\tDOB\tPhone\tLicence\tClass\nMark Fitzgerald\t14/07/1976\t021 553 7781\tDF338210\t1, 2\nWayne Pirihi\t02/02/1983\t027 914 6620\tEK104472\t1, 4, 5\nSam Cooper\t29/11/1990\t022 403 1185\tGJ559018\t1",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Mark Fitzgerald"
+      },
+      {
+        "type": "dob",
+        "value": "14/07/1976"
+      },
+      {
+        "type": "phone",
+        "value": "021 553 7781"
+      },
+      {
+        "type": "licence",
+        "value": "DF338210"
+      },
+      {
+        "type": "name",
+        "value": "Wayne Pirihi"
+      },
+      {
+        "type": "dob",
+        "value": "02/02/1983"
+      },
+      {
+        "type": "phone",
+        "value": "027 914 6620"
+      },
+      {
+        "type": "licence",
+        "value": "EK104472"
+      },
+      {
+        "type": "name",
+        "value": "Sam Cooper"
+      },
+      {
+        "type": "dob",
+        "value": "29/11/1990"
+      },
+      {
+        "type": "phone",
+        "value": "022 403 1185"
+      },
+      {
+        "type": "licence",
+        "value": "GJ559018"
+      }
+    ],
+    "negatives": [],
+    "notes": "Licence and DOB are identified by the column headers (Licence, DOB) rather than inline keywords."
+  },
+  {
+    "id": "d056",
+    "kind": "email",
+    "text": "Subject: Fwd: Your order has shipped\n\n---------- Forwarded message ---------\nFrom: Kiwi Outdoors <orders@example.com>\nYour order KO-339201 has shipped and will be delivered to:\nDaniel Okafor\n62 Station Road, Ōtāhuhu, Auckland 1062\nItems: 1 x Tent 3P ($399.00)\n",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Daniel Okafor"
+      },
+      {
+        "type": "address",
+        "value": "62 Station Road, Ōtāhuhu, Auckland 1062"
+      },
+      {
+        "type": "email",
+        "value": "orders@example.com"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "KO-339201",
+        "why": "order number"
+      },
+      {
+        "value": "1",
+        "why": "quantity"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d057",
+    "kind": "teams",
+    "text": "Anna - the IRD for Ropata is 124 012 678 not what's in the system, can you fix b4 the run",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Anna"
+      },
+      {
+        "type": "name",
+        "value": "Ropata"
+      },
+      {
+        "type": "ird",
+        "value": "124 012 678"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d058",
+    "kind": "accounts_payable",
+    "text": "Credit card recon Sept\nCard ending 1881 - 23 transactions, $4,882.10\nUnmatched: Adobe $84.99, Uber $32.40\nStatement ref 4680542763813303",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "1881",
+        "why": "last 4 digits only"
+      },
+      {
+        "value": "23",
+        "why": "count"
+      },
+      {
+        "value": "4,882.10",
+        "why": "amount"
+      },
+      {
+        "value": "84.99",
+        "why": "price"
+      },
+      {
+        "value": "32.40",
+        "why": "price"
+      },
+      {
+        "value": "4680542763813303",
+        "why": "16-digit statement reference failing Luhn"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d059",
+    "kind": "customer_ticket",
+    "text": "Hi its Barbara from 12 Seaview Tce, Paraparaumu, my landline is (04) 297 3318 and the internet has been down since sunday!!! also email barb.g@example.co.nz",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Barbara"
+      },
+      {
+        "type": "address",
+        "value": "12 Seaview Tce, Paraparaumu"
+      },
+      {
+        "type": "phone",
+        "value": "(04) 297 3318"
+      },
+      {
+        "type": "email",
+        "value": "barb.g@example.co.nz"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d060",
+    "kind": "school_enrolment",
+    "text": "Roll numbers as at 1 Oct: Year 1 48, Year 2 52, Year 3 45. Zone enrolments 121, out-of-zone ballot 24 places. MOE number 1342.",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "48",
+        "why": "count"
+      },
+      {
+        "value": "52",
+        "why": "count"
+      },
+      {
+        "value": "45",
+        "why": "count"
+      },
+      {
+        "value": "121",
+        "why": "count"
+      },
+      {
+        "value": "24",
+        "why": "count"
+      },
+      {
+        "value": "1342",
+        "why": "school number"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d061",
+    "kind": "slack",
+    "text": "card for the team lunch is 4012 8888 8888 1881 exp 11/27 - use it at the cafe, Rangi approved",
+    "expected": [
+      {
+        "type": "card",
+        "value": "4012 8888 8888 1881"
+      },
+      {
+        "type": "name",
+        "value": "Rangi"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d062",
+    "kind": "tenancy_application",
+    "text": "Property PR-2201 - 2 brm unit, $560/wk, bond 4 weeks. 11 applications received, viewings Sat 10-11.",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "PR-2201",
+        "why": "property reference"
+      },
+      {
+        "value": "560",
+        "why": "price"
+      },
+      {
+        "value": "4",
+        "why": "count"
+      },
+      {
+        "value": "11",
+        "why": "count"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d063",
+    "kind": "hr_onboarding",
+    "text": "From the IR330: Tevita Mahe\nIRD 036-380-179\nbank 12 3015 9657686-085\nph 0800 438 279 (this is his work 0800 line, he said use it)",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Tevita Mahe"
+      },
+      {
+        "type": "ird",
+        "value": "036-380-179"
+      },
+      {
+        "type": "bank",
+        "value": "12 3015 9657686-085"
+      },
+      {
+        "type": "phone",
+        "value": "0800 438 279"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d064",
+    "kind": "acc_health_note",
+    "text": "Pharmacy note: J. Herewini DOB 1/1/1950 NHI JKE6110 - dispensed 30 x Metformin 500mg. Rx no RX-883021",
+    "expected": [
+      {
+        "type": "name",
+        "value": "J. Herewini"
+      },
+      {
+        "type": "dob",
+        "value": "1/1/1950"
+      },
+      {
+        "type": "nhi",
+        "value": "JKE6110"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "30",
+        "why": "quantity"
+      },
+      {
+        "value": "Metformin 500mg",
+        "why": "medicine and dose"
+      },
+      {
+        "value": "RX-883021",
+        "why": "prescription number"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d065",
+    "kind": "spreadsheet_csv",
+    "text": "Name,Card,Expiry,Amount\nIvy Chen,4659-0304-6351-7154,09/27,120.00\nOllie Grant,3782 822463 10005,01/28,85.50\nRuth Moana,4238-6738-6086-5305,03/27,64.00",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Ivy Chen"
+      },
+      {
+        "type": "card",
+        "value": "4659-0304-6351-7154"
+      },
+      {
+        "type": "name",
+        "value": "Ollie Grant"
+      },
+      {
+        "type": "card",
+        "value": "3782 822463 10005"
+      },
+      {
+        "type": "name",
+        "value": "Ruth Moana"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "120.00",
+        "why": "price"
+      },
+      {
+        "value": "85.50",
+        "why": "price"
+      },
+      {
+        "value": "4238-6738-6086-5305",
+        "why": "card-looking number failing Luhn"
+      },
+      {
+        "value": "64.00",
+        "why": "price"
+      }
+    ],
+    "notes": "3782 822463 10005 is the well-known 15-digit Amex test number (Luhn-valid)."
+  },
+  {
+    "id": "d066",
+    "kind": "payroll_note",
+    "text": "Final pay - Carlos Mendes. Leaving 14/11. Annual leave owing 9.5 days. Pay to 06-0501-8902397-081. Send final payslip to carlos.mendes@example.com as work email will be closed.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Carlos Mendes"
+      },
+      {
+        "type": "bank",
+        "value": "06-0501-8902397-081"
+      },
+      {
+        "type": "email",
+        "value": "carlos.mendes@example.com"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "9.5",
+        "why": "days quantity"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d067",
+    "kind": "teams",
+    "text": "payroll system rejected 048-642-943 again - pretty sure the employee mistyped it, I've emailed them for a screenshot of myIR",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "048-642-943",
+        "why": "IRD-looking number with wrong check digit (failed validation)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d068",
+    "kind": "customer_ticket",
+    "text": "Web form submission\nName: kerry anne walsh\nPhone: 0277 001 223\nEmail: KERRYWALSH@EXAMPLE.CO.NZ\nMessage: hi can i get a quote for 3 rooms of carpet, approx 45m2. im at 7 Puriri st, Whangārei",
+    "expected": [
+      {
+        "type": "name",
+        "value": "kerry anne walsh"
+      },
+      {
+        "type": "phone",
+        "value": "0277 001 223"
+      },
+      {
+        "type": "email",
+        "value": "KERRYWALSH@EXAMPLE.CO.NZ"
+      },
+      {
+        "type": "address",
+        "value": "7 Puriri st, Whangārei"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "3",
+        "why": "quantity"
+      },
+      {
+        "value": "45m2",
+        "why": "area quantity"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d069",
+    "kind": "accounts_payable",
+    "text": "Duplicate payment check: INV-7781 paid twice on 02/10 and 09/10 ($1,980.00). Requested refund from vendor. Vendor ID V00231.",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "INV-7781",
+        "why": "invoice number"
+      },
+      {
+        "value": "1,980.00",
+        "why": "price"
+      },
+      {
+        "value": "V00231",
+        "why": "vendor id"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d070",
+    "kind": "slack",
+    "text": "just a heads up Priya's birthday is 12 March - cake in kitchen!! (collecting $5 each)",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Priya"
+      },
+      {
+        "type": "dob",
+        "value": "12 March"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "5",
+        "why": "price"
+      }
+    ],
+    "notes": "'12 March' is a birthday without a year; still labelled dob because the text marks it as a birthday."
+  },
+  {
+    "id": "d071",
+    "kind": "school_enrolment",
+    "text": "Hi there, I'd like to enrol my daughter Isla McKenzie for term 1. She was born 8 August 2020. Our address is 33 Kauri Crescent, Mount Maunganui 3116. You can reach me on 021-338-4479.\nFraser McKenzie",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Isla McKenzie"
+      },
+      {
+        "type": "dob",
+        "value": "8 August 2020"
+      },
+      {
+        "type": "address",
+        "value": "33 Kauri Crescent, Mount Maunganui 3116"
+      },
+      {
+        "type": "phone",
+        "value": "021-338-4479"
+      },
+      {
+        "type": "name",
+        "value": "Fraser McKenzie"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d072",
+    "kind": "hr_onboarding",
+    "text": "Induction schedule\nDay 1 9:00 H&S, 11:00 IT setup, 13:30 team lunch\nDay 2 systems training (room 3B)\nDay 3 shadowing",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "9:00",
+        "why": "time"
+      },
+      {
+        "value": "11:00",
+        "why": "time"
+      },
+      {
+        "value": "13:30",
+        "why": "time"
+      },
+      {
+        "value": "3B",
+        "why": "room number"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d073",
+    "kind": "acc_health_note",
+    "text": "Physio referral\nPatient: Eru Waaka\nDOB: 1972-10-05\nNHI: NKH8980\nAddress: 16 Rata St, Gisborne 4010\nPhone: 06 867 4401\nNote: NHI on referral doesn't validate - please confirm with GP.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Eru Waaka"
+      },
+      {
+        "type": "dob",
+        "value": "1972-10-05"
+      },
+      {
+        "type": "address",
+        "value": "16 Rata St, Gisborne 4010"
+      },
+      {
+        "type": "phone",
+        "value": "06 867 4401"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "NKH8980",
+        "why": "NHI-looking code with bad check digit (as written on the referral)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d074",
+    "kind": "email",
+    "text": "Hi Lisa\n\nPlease update my direct debit to my new account 060501904761850 from next month.\nMy customer number is in the subject line.\n\nKind regards\nRobert Ngata\n2/44 Clyde Quay, Oriental Bay, Wellington 6011",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Lisa"
+      },
+      {
+        "type": "bank",
+        "value": "060501904761850"
+      },
+      {
+        "type": "name",
+        "value": "Robert Ngata"
+      },
+      {
+        "type": "address",
+        "value": "2/44 Clyde Quay, Oriental Bay, Wellington 6011"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d075",
+    "kind": "spreadsheet_tsv",
+    "text": "Invoice\tCustomer\tDate\tDue\tAmount\tStatus\nINV-30112\tKowhai Builders Ltd\t02/10/2026\t20/10/2026\t4,210.00\tPaid\nINV-30113\tTui Electrical\t03/10/2026\t20/10/2026\t880.50\tOverdue\nINV-30114\tHarbour Dental\t03/10/2026\t20/10/2026\t1,120.00\tSent",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "INV-30112",
+        "why": "invoice number"
+      },
+      {
+        "value": "4,210.00",
+        "why": "price"
+      },
+      {
+        "value": "INV-30113",
+        "why": "invoice number"
+      },
+      {
+        "value": "880.50",
+        "why": "price"
+      },
+      {
+        "value": "INV-30114",
+        "why": "invoice number"
+      },
+      {
+        "value": "1,120.00",
+        "why": "price"
+      }
+    ],
+    "notes": "Invoice and due dates are not birth dates; customers are companies."
+  },
+  {
+    "id": "d076",
+    "kind": "customer_ticket",
+    "text": "Customer complaint escalated from Ahmed Hassan. He provided his licence number HM 402917 for the rental agreement and is upset it was printed on the receipt.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Ahmed Hassan"
+      },
+      {
+        "type": "licence",
+        "value": "HM 402917"
+      }
+    ],
+    "negatives": [],
+    "notes": "Licence written with a space between letters and digits (HM 402917)."
+  },
+  {
+    "id": "d077",
+    "kind": "tenancy_application",
+    "text": "re: bond lodgement\ntenant Georgia Smith (ID: passport EA330918) paid $2,480 bond into trust a/c. Refund details at end of tenancy: 06-0501-3444584-43. Tenant mobile +64 27 590 1123.",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Georgia Smith"
+      },
+      {
+        "type": "passport",
+        "value": "EA330918"
+      },
+      {
+        "type": "bank",
+        "value": "06-0501-3444584-43"
+      },
+      {
+        "type": "phone",
+        "value": "+64 27 590 1123"
+      }
+    ],
+    "negatives": [
+      {
+        "value": "2,480",
+        "why": "price"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d078",
+    "kind": "payroll_note",
+    "text": "Payroll calendar 2027 - fortnightly, pay day Wed.\nCut-off Mon 12pm. Public hols: Waitangi Day, Easter, Matariki (9 July).",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "12pm",
+        "why": "time"
+      },
+      {
+        "value": "9 July",
+        "why": "date (public holiday)"
+      }
+    ],
+    "notes": ""
+  },
+  {
+    "id": "d079",
+    "kind": "slack",
+    "text": "FYI Nina Kowalski new number is 022 7001 455 and her personal email is nina.k.1990@example.com (for the xmas party invite)",
+    "expected": [
+      {
+        "type": "name",
+        "value": "Nina Kowalski"
+      },
+      {
+        "type": "phone",
+        "value": "022 7001 455"
+      },
+      {
+        "type": "email",
+        "value": "nina.k.1990@example.com"
+      }
+    ],
+    "negatives": [],
+    "notes": ""
+  },
+  {
+    "id": "d080",
+    "kind": "accounts_payable",
+    "text": "AGED PAYABLES - as at 31/10/2026 (exported from Xero, pasted)\n\nSupplier\tRef\tPO\tCurrent\t30 days\t60 days\t90+\nBluebird Packaging\tBB-44021\t4500013201\t1,240.00\t\t\t\nBluebird Packaging\tBB-44108\t4500013218\t\t880.40\t\t\nSouthern Freight\t77059278\t-\t3,915.75\t\t\t\nSouthern Freight\t827932660\t-\t\t\t412.00\t\nKea Cleaning Co\tKC0091\t4500013240\t460.00\t460.00\t\t\nKea Cleaning Co\tKC0084\t-\t\t\t\t460.00\nMatariki Print\tMP-2210\t-\t\t2,105.60\t\t\n\nTOTALS\t\t\t5,615.75\t3,446.00\t412.00\t460.00\n\nNotes\n- Kea Cleaning 90+ is disputed (cleaners missed 3 visits in July)\n- Southern Freight 60 day: waiting on POD for con note SF77120044\n- Matariki Print GST no. on invoice is 130-939-961, matches NZBN register\n- Bluebird credit CN-0081 for $120.00 not yet applied\n- pay run Wed 5th, cap $10k this week\n\nNext steps: approve in Xero by Tue 4pm, AP to batch Wed am.",
+    "expected": [],
+    "negatives": [
+      {
+        "value": "BB-44021",
+        "why": "invoice number"
+      },
+      {
+        "value": "4500013201",
+        "why": "purchase order number"
+      },
+      {
+        "value": "BB-44108",
+        "why": "invoice number"
+      },
+      {
+        "value": "4500013218",
+        "why": "purchase order number"
+      },
+      {
+        "value": "77059278",
+        "why": "invoice number (8 digits, fails IRD check)"
+      },
+      {
+        "value": "827932660",
+        "why": "invoice number (9 digits, fails IRD check)"
+      },
+      {
+        "value": "4500013240",
+        "why": "purchase order number"
+      },
+      {
+        "value": "3",
+        "why": "count"
+      },
+      {
+        "value": "SF77120044",
+        "why": "consignment note number"
+      },
+      {
+        "value": "CN-0081",
+        "why": "credit note number"
+      },
+      {
+        "value": "120.00",
+        "why": "price"
+      }
+    ],
+    "notes": "130-939-961 is Matariki Print's company GST number (checksum-valid as an IRD number) - deliberately unlabelled because it is a company's, not a person's."
+  }
+]
