@@ -2,7 +2,7 @@
 
 Take New Zealand personal details out of text before it goes into an AI tool, then put them back into the answer.
 
-![NZ Redact finding an IRD number, bank account, NHI number, phone, email and date of birth in an email](docs/demo.gif)
+![NZ Redact with an example email: the IRD number, bank account, NHI number, phone, email and date of birth are highlighted, and the Found list beside the text shows each one with its placeholder](docs/nz-redact-social.png)
 
 Paste an email, a note or a spreadsheet. NZ Redact swaps each detail for a numbered placeholder such as `[IRD_1]`. Paste the redacted copy into any AI tool. When the answer comes back, paste it into step 3 and the real details return.
 
