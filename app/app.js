@@ -50,6 +50,7 @@
   function autosize(t, min) { t.style.height = "auto"; t.style.height = Math.max(t.scrollHeight, min || 352) + "px"; }
 
   function render() {
+    stopIntro();
     var text = input.value;
     // Added text that is no longer in the document is dropped.
     added = added.filter(function (v) { return R.scan(text, { added: [v], types: ["added"] }).length > 0; });
@@ -69,7 +70,8 @@
     var at = 0;
     all.forEach(function (f) {
       marks.appendChild(document.createTextNode(text.slice(at, f.start)));
-      marks.appendChild(el("mark", "hl g-" + R.TYPES[f.type].group + (isMaybe(f) ? " is-maybe" : "") + (kept[keyOf(f)] ? " is-kept" : ""), text.slice(f.start, f.end)));
+      var m = marks.appendChild(el("mark", "hl g-" + R.TYPES[f.type].group + (isMaybe(f) ? " is-maybe" : "") + (kept[keyOf(f)] ? " is-kept" : ""), text.slice(f.start, f.end)));
+      m.dataset.k = keyOf(f);
       at = f.end;
     });
     marks.appendChild(document.createTextNode(text.slice(at) + "\n"));
@@ -98,7 +100,7 @@
         var body = el("div", "hit-body");
         var top = el("div", "hit-top");
         top.appendChild(el("span", "hit-label", R.TYPES[f.type].label));
-        if (on && tokenByKey[k]) top.appendChild(el("span", "tok tok-sm", tokenByKey[k]));
+        if (on && tokenByKey[k]) top.appendChild(el("span", "tok tok-sm", tokenByKey[k])).dataset.k = k;
         if (!on) top.appendChild(el("span", "kept-pill", "Left in"));
         if (isMaybe(f)) top.appendChild(el("span", "maybe-pill", "Possible"));
         body.appendChild(top);
@@ -184,6 +186,60 @@
     copyRestored.disabled = false;
     copyRestored.dataset.text = res.text;
     if (res.unknown.length) restoredView.appendChild(el("p", "doc-note", "Not recognised, left as written: " + res.unknown.join(", ") + "."));
+  }
+
+  // The opening demonstration: an outline draws round each detail the rules found, its highlight fills in, and its
+  // placeholder writes itself into the list. It plays once when the editor comes into view and again on Example,
+  // never with reduced motion, and any change to the text stops it. The look is in app.css (.is-intro).
+  var INTRO_START = 250, INTRO_STEP = 110, INTRO_DRAW = 640, INTRO_HOLD = 700, INTRO_FADE = 520;
+  var introTimer = null, introWatch = null;
+  function stopIntro() {
+    clearTimeout(introTimer);
+    editor.classList.remove("is-intro");
+    editor.classList.remove("is-settled");
+    groupsBox.classList.remove("is-intro");
+  }
+  function canAnimate() {
+    return !!(window.matchMedia && editor.getClientRects) && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+  function playIntro() {
+    stopIntro();
+    if (!canAnimate()) return;
+    if (introWatch) { introWatch.disconnect(); introWatch = null; }
+    var hl =[].slice.call(marks.querySelectorAll("mark.hl")), firstAt = {};
+    hl.forEach(function (m, i) {
+      var d = INTRO_START + i * INTRO_STEP;
+      m.style.setProperty("--d", d + "ms");
+      m.classList.toggle("is-wrapped", m.getClientRects().length > 1);   // an outline only goes round a detail on one line
+      if (!(m.dataset.k in firstAt)) firstAt[m.dataset.k] = d;
+    });
+    [].forEach.call(groupsBox.querySelectorAll(".tok-sm"), function (t) {
+      var d = firstAt[t.dataset.k];
+      t.style.setProperty("--d", (d == null ? INTRO_START : d + INTRO_DRAW - 120) + "ms");
+      t.style.setProperty("--n", String(t.textContent.length));
+    });
+    void editor.offsetWidth;                  // start from the first frame, even when it was already playing
+    editor.classList.add("is-intro");
+    groupsBox.classList.add("is-intro");
+    var end = INTRO_START + Math.max(0, hl.length - 1) * INTRO_STEP + INTRO_DRAW + INTRO_HOLD;
+    introTimer = setTimeout(function () {
+      editor.classList.add("is-settled");     // the outlines fade, then the classes go and the page is in its normal state
+      introTimer = setTimeout(stopIntro, INTRO_FADE);
+    }, end);
+  }
+  function playIntroWhenSeen() {
+    if (!canAnimate()) return;
+    var start = function () {
+      if (!("IntersectionObserver" in window)) return playIntro();
+      introWatch = new IntersectionObserver(function (entries) {
+        if (!entries[0].isIntersecting) return;
+        introWatch.disconnect();
+        introWatch = null;
+        if (input.value === EXAMPLE) playIntro();
+      }, { threshold: 0.4 });
+      introWatch.observe(editor);
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
   }
 
   // "Remove this too": select words the rules missed and they are removed everywhere they appear.
@@ -402,7 +458,7 @@
   var timer;
   input.addEventListener("input", function () { hideRemove(); hideUndo(); clearTimeout(timer); timer = setTimeout(render, 60); });
   reply.addEventListener("input", function () { hideUndo(); pasteNote.textContent = ""; autosize(reply, 128); renderRestore(); });
-  $("example").addEventListener("click", function () { kept = {}; added = []; hideRemove(); hideUndo(); input.value = EXAMPLE; render(); input.focus(); });
+  $("example").addEventListener("click", function () { kept = {}; added = []; hideRemove(); hideUndo(); input.value = EXAMPLE; render(); input.focus(); playIntro(); });
   $("clear").addEventListener("click", function () {
     var had = input.value || reply.value;
     var before = { input: input.value, reply: reply.value, kept: kept, added: added };
@@ -466,4 +522,5 @@
   reply.value = "Done. I have drafted the refund note for [IRD_1] to account [BANK_ACCOUNT_1], and will confirm by email to [EMAIL_1].";
   autosize(reply, 128);
   renderRestore();
+  playIntroWhenSeen();
 })();

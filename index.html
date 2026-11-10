@@ -16,12 +16,12 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="robots" content="noindex, nofollow">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0e14" media="(prefers-color-scheme: dark)">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="app/icon-192.png">
-  <link rel="preload" href="app/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="app/fonts/inter-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="app/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <script src="app/theme.js"></script>
   <link rel="stylesheet" href="app/app.css">
@@ -53,9 +53,11 @@
 
   <main id="main">
     <section class="hero frame" aria-labelledby="hero-h">
-      <p class="kicker"><span class="dot" aria-hidden="true"></span>Free and open source. Runs on your device.</p>
-      <h1 id="hero-h">Take the personal details out before it goes into AI.</h1>
-      <p class="lede">Paste an email, a note or a spreadsheet. NZ Redact swaps IRD, NHI, bank, card, licence and passport numbers, phone numbers, emails, dates of birth, street addresses and people's names for placeholders such as <code class="ph">[IRD_1]</code>. When the AI answers, paste the answer back and the real details return.</p>
+      <div class="hero-main">
+        <h1 id="hero-h">NZ Redact takes IRD, NHI and bank numbers out of text <em class="serif">before</em> it goes into AI.</h1>
+        <p class="lede">Paste an email, a note or a spreadsheet. NZ Redact swaps IRD, NHI, bank, card, licence and passport numbers, phone numbers, emails, dates of birth, street addresses and people's names for placeholders such as <code class="ph">[IRD_1]</code>. When the AI answers, paste the answer back and the real details return.</p>
+        <p class="hero-meta">Free and open source. Runs on your device.</p>
+      </div>
       <ul class="assure" aria-label="Why you can trust it">
         <li><svg class="i"><use href="app/icons.svg#wifi-off"/></svg><span><strong>Nothing is sent.</strong> The page is blocked from connecting to anything, and works offline.</span></li>
         <li><svg class="i"><use href="app/icons.svg#shield-check"/></svg><span><strong>Real checks.</strong> IRD, NHI and bank numbers must pass their official check digit.</span></li>
@@ -75,7 +77,7 @@
           </div>
           <div class="bar-end">
             <span class="pill" id="status" role="status">Nothing yet</span>
-            <button type="button" class="btn btn-ink" id="copy-redacted" disabled aria-keyshortcuts="Control+Enter">
+            <button type="button" class="btn btn-accent" id="copy-redacted" disabled aria-keyshortcuts="Control+Enter">
               <svg class="i"><use id="copy-redacted-icon" href="app/icons.svg#copy"/></svg><span class="label" id="copy-redacted-label">Copy redacted text</span><kbd class="kbd" aria-hidden="true">Ctrl ↵</kbd>
             </button>
           </div>
@@ -149,21 +151,21 @@
       </section>
     </div>
 
-    <section class="section frame" id="how" aria-labelledby="how-h">
+    <section class="section section-split frame" id="how" aria-labelledby="how-h">
+      <p class="section-label">How it works</p>
       <div class="section-head">
-        <p class="label-mono">How it works</p>
         <h2 id="how-h">Three steps, all on your device</h2>
       </div>
-      <ol class="how">
-        <li><span class="how-n">01</span><h3>Paste</h3><p>Paste text or drop a file. Every detail it finds is marked in place, grouped on the right, and can be switched off.</p></li>
-        <li><span class="how-n">02</span><h3>Copy the redacted text</h3><p>Each detail becomes a numbered placeholder. The same number always gets the same placeholder, so the AI can still follow who is who.</p></li>
-        <li><span class="how-n">03</span><h3>Put the details back</h3><p>Paste the AI's answer into step 3. The placeholders turn back into the real details, ready to copy.</p></li>
+      <ol class="how section-body">
+        <li><span class="how-n">1</span><div><h3>Paste</h3><p>Paste text or drop a file. Every detail it finds is marked in place, grouped on the right, and can be switched off.</p></div><p class="how-eg" aria-hidden="true">IRD <span class="eg-hit g-id">49-098-576</span></p></li>
+        <li><span class="how-n">2</span><div><h3>Copy the redacted text</h3><p>Each detail becomes a numbered placeholder. The same number always gets the same placeholder, so the AI can still follow who is who.</p></div><p class="how-eg" aria-hidden="true">IRD <span class="tok g-id">[IRD_1]</span></p></li>
+        <li><span class="how-n">3</span><div><h3>Put the details back</h3><p>Paste the AI's answer into step 3. The placeholders turn back into the real details, ready to copy.</p></div><p class="how-eg" aria-hidden="true">IRD <mark class="back">49-098-576</mark></p></li>
       </ol>
     </section>
 
     <section class="section frame" id="finds" aria-labelledby="finds-h">
+      <p class="section-label">What it finds</p>
       <div class="section-head">
-        <p class="label-mono">What it finds</p>
         <h2 id="finds-h">Eleven kinds of New Zealand detail</h2>
         <p class="section-lede">Numbers with a check digit are only flagged when the check digit is right, so order numbers and prices are left alone.</p>
       </div>
@@ -188,15 +190,15 @@
     </section>
 
     <section class="section frame" id="accuracy" aria-labelledby="acc-h">
+      <p class="section-label">Accuracy</p>
       <div class="section-head">
-        <p class="label-mono">Accuracy</p>
         <h2 id="acc-h">Tested blind on two sets of <span data-eval="docs">30</span> NZ documents</h2>
         <p class="section-lede">Both sets were written and marked up by hand by someone who could not see the rules: emails, payroll notes, spreadsheet rows and support tickets. These are the results as measured, including what it misses.</p>
       </div>
 
       <h3 class="acc-set">Set 1: the original <span data-eval="docs">30</span> documents</h3>
       <div class="acc-grid">
-        <div class="stat"><p class="stat-n" data-eval="structured">0%</p><p class="stat-l">of numbers, dates, emails, phones and addresses found</p></div>
+        <div class="stat stat-lead"><p class="stat-n" data-eval="structured">0%</p><p class="stat-l">of numbers, dates, emails, phones and addresses found</p></div>
         <div class="stat stat-warn"><p class="stat-n" data-eval="names">0%</p><p class="stat-l">of people's names found with possible names, up from <span data-eval="names-sure">0%</span> in version 1.0</p></div>
         <div class="stat"><p class="stat-n" data-eval="precision">0%</p><p class="stat-l">of what it removed was a real detail</p></div>
         <div class="stat"><p class="stat-n" data-eval="negatives">0</p><p class="stat-l">look-alikes left alone, such as order numbers and wrong check digits</p></div>
@@ -204,7 +206,7 @@
 
       <h3 class="acc-set">Set 2: <span data-eval="n-docs">30</span> documents about names, written for version 1.1</h3>
       <div class="acc-grid acc-grid-3">
-        <div class="stat stat-warn"><p class="stat-n" data-eval="n-recall">0%</p><p class="stat-l"><span data-eval="n-found">0</span> of <span data-eval="n-expected">0</span> people's names found</p></div>
+        <div class="stat stat-lead stat-warn"><p class="stat-n" data-eval="n-recall">0%</p><p class="stat-l"><span data-eval="n-found">0</span> of <span data-eval="n-expected">0</span> people's names found</p></div>
         <div class="stat"><p class="stat-n" data-eval="n-precision">0%</p><p class="stat-l">of the names it removed were real names (<span data-eval="n-wrong">0</span> were not)</p></div>
         <div class="stat"><p class="stat-n" data-eval="n-negatives">0</p><p class="stat-l">look-alike words left alone, such as places, months, and words like Will and May</p></div>
       </div>
@@ -231,13 +233,13 @@
       </div>
     </section>
 
-    <section class="section frame" id="code" aria-labelledby="code-h">
+    <section class="section section-split frame" id="code" aria-labelledby="code-h">
+      <p class="section-label">Use in code</p>
       <div class="section-head">
-        <p class="label-mono">Use in code</p>
         <h2 id="code-h">One file, no dependencies</h2>
         <p class="section-lede">The rules are a single JavaScript file that works in the browser and in Node.js. Copy <code>src/nz-redact.js</code> from GitHub.</p>
       </div>
-      <pre class="code" tabindex="0"><code><span class="c">// Find the details and make the redacted copy</span>
+      <pre class="code section-body" tabindex="0"><code><span class="c">// Find the details and make the redacted copy</span>
 const found = NZRedact.scan(text);
 const { text: safe, map } = NZRedact.redact(text, found);
 

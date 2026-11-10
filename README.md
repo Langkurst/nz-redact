@@ -110,4 +110,4 @@ Free and open source. If it saved you time, you can support my work on [Ko-fi](h
 
 ## Licence
 
-MIT. Made by Christopher Nottle in Auckland. Fonts: Geist and Geist Mono (SIL OFL 1.1). Icons: Lucide (ISC licence).
+MIT. Made by Christopher Nottle in Auckland. Fonts: Inter, Newsreader and Geist Mono (SIL OFL 1.1). Icons: Lucide (ISC licence).
