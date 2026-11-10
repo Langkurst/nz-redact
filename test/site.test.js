@@ -60,3 +60,439 @@ test("no tool branding anywhere in the repository", () => {
     assert.equal(m, null, `${path.relative(ROOT, f)}: "${m && m[0]}"`);
   }
 });
+
+// ---------- the page's behaviour, run against a very small stand-in for the browser ----------
+// The page script only needs a handful of browser features. This stand-in supplies them, so the real app.js runs
+// unchanged in Node and its output can be checked.
+const vm = require("vm");
+
+function loadApp(options = {}) {
+  class Node {
+    constructor(tag, nodeType) { this.tag = tag; this.nodeType = nodeType || 1; this.childNodes = []; this.attrs = {}; this.dataset = {}; this.style = {}; this.hidden = false; this.value = ""; this.className = ""; this.nodeValue = null; this.handlers = {}; }
+    get tagName() { return this.tag.toUpperCase(); }
+    get firstChild() { return this.childNodes[0] || null; }
+    get classList() { const self = this; return { add: (c) => { self.className = (self.className + " " + c).trim(); }, remove: (c) => { self.className = self.className.split(" ").filter((x) => x !== c).join(" "); } }; }
+    get textContent() { return this.nodeType === 3 ? this.nodeValue : this.childNodes.map((c) => c.textContent).join(""); }
+    set textContent(v) { this.childNodes = v === "" || v == null ? [] : [makeText(String(v))]; }
+    appendChild(c) { this.childNodes.push(c); return c; }
+    setAttribute(k, v) { this.attrs[k] = String(v); if (k === "class") this.className = String(v); }
+    getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }
+    addEventListener(name, fn) { (this.handlers[name] = this.handlers[name] || []).push(fn); }
+    fire(name, event) { (this.handlers[name] || []).forEach((fn) => fn(Object.assign({ preventDefault() {}, target: this }, event))); }
+    all(test, out = []) { this.childNodes.forEach((c) => { if (c.nodeType === 1) { if (test(c)) out.push(c); c.all(test, out); } }); return out; }
+    querySelector(sel) { return this.querySelectorAll(sel)[0] || new Node("stub"); }
+    querySelectorAll(sel) {
+      const m = sel.match(/^\[([a-z-]+)="(.*)"\]$/);
+      if (m) return this.all((n) => n.dataset[m[1].replace(/^data-/, "")] === m[2] || n.attrs[m[1]] === m[2]);
+      return [];
+    }
+    focus() { doc.activeElement = this; }
+    setSelectionRange(a, b) { this.selectionStart = a; this.selectionEnd = b; }
+    getBoundingClientRect() { return { top: 0, left: 0, right: 100, bottom: 20, width: 100, height: 20 }; }
+    get offsetWidth() { return 100; }
+    get offsetHeight() { return 30; }
+    get scrollHeight() { return 100; }
+  }
+  const makeText = (v) => { const t = new Node("#text", 3); t.nodeValue = v; return t; };
+  const byId = {};
+  // Each element that has an id starts with the attributes it has in index.html (hidden, disabled, aria-controls and so on).
+  for (const [tag, name, attrs] of [...html.matchAll(/<(\w+)\s([^>]*?\bid="([^"]+)"[^>]*)>/g)].map((m) => [m[1], m[3], m[2]])) {
+    const n = new Node(tag);
+    n.id = name;
+    for (const [, k, v] of attrs.matchAll(/([\w:-]+)="([^"]*)"/g)) n.setAttribute(k, v);
+    n.hidden = /\shidden(\s|$)/.test(" " + attrs);
+    n.disabled = /\sdisabled(\s|$)/.test(" " + attrs);
+    byId[name] = n;
+  }
+  const doc = {
+    activeElement: null,
+    handlers: {},
+    documentElement: new Node("html"),
+    getElementById(id) { return byId[id] || (byId[id] = new Node("div")); },
+    createElement(tag) { return new Node(tag); },
+    createElementNS(ns, tag) { return new Node(tag); },
+    createTextNode: makeText,
+    createRange() { return { setStart() {}, setEnd() {}, getClientRects: () => [], getBoundingClientRect: () => ({ top: 0, bottom: 20, left: 0, right: 40 }) }; },
+    querySelectorAll() { return []; },
+    addEventListener(name, fn) { (doc.handlers[name] = doc.handlers[name] || []).push(fn); },
+  };
+  // A clock the test controls, so the 1.5 second and 8 second timers can be checked without waiting.
+  let now = 0, nextId = 1;
+  const timers = new Map();
+  const fakeSetTimeout = (fn, ms) => { const id = nextId++; timers.set(id, { at: now + (ms || 0), fn }); return id; };
+  const fakeClearTimeout = (id) => { timers.delete(id); };
+  const winHandlers = {};
+  const win = { NZRedact: require("../src/nz-redact.js"), addEventListener(name, fn) { (winHandlers[name] = winHandlers[name] || []).push(fn); }, isSecureContext: !!options.secure };
+  const context = { window: win, document: doc, navigator: options.navigator || {}, location: { protocol: "http:", hostname: "example" }, localStorage: { setItem() {} }, CSS: { escape: (s) => s }, setTimeout: fakeSetTimeout, clearTimeout: fakeClearTimeout };
+  vm.runInNewContext(read("app/app.js"), context);
+  const $ = (id) => doc.getElementById(id);
+  // Moves the clock on, running any timer that falls due, and lets pending promises finish.
+  const wait = async (ms) => {
+    const end = now + ms;
+    for (;;) {
+      await Promise.resolve(); await Promise.resolve();
+      const due = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+      if (!due) break;
+      timers.delete(due[0]); now = Math.max(now, due[1].at); due[1].fn();
+    }
+    now = end;
+    await Promise.resolve(); await Promise.resolve();
+  };
+  const key = (name, init = {}) => {
+    const event = Object.assign({ target: doc.activeElement || byId.body || new Node("body"), key: "", preventDefault() { event.defaultPrevented = true; } }, init);
+    (doc.handlers[name] || []).forEach((fn) => fn(event));
+    return event;
+  };
+  const windowFire = (name) => (winHandlers[name] || []).forEach((fn) => fn({}));
+  const type = async (text) => { $("input").value = text; $("input").fire("input"); await wait(120); };
+  const select = async (text, word) => {
+    const input = $("input"), at = text.indexOf(word);
+    input.setSelectionRange(at, at + word.length);
+    doc.activeElement = input;
+    input.fire("select");
+    await wait(20);
+  };
+  $("input").tag = "textarea";
+  $("reply").tag = "textarea";
+  return { $, doc, type, select, wait, key, windowFire, all: (node, cls) => node.all((n) => (" " + n.className + " ").includes(" " + cls + " ")) };
+}
+
+test("page: a possible name shows with the Possible badge and a dashed underline, and is switched on by default", async () => {
+  const app = loadApp();
+  await app.type("Please ask Zephyrine about the invoice, and Patient: Eru Waaka will call.");
+  const rows = app.all(app.$("groups"), "hit");
+  const row = rows.find((r) => r.textContent.includes("Zephyrine"));
+  assert.ok(row, "the possible name is listed");
+  assert.equal(app.all(row, "maybe-pill").length, 1);
+  assert.equal(app.all(row, "maybe-pill")[0].textContent, "Possible");
+  const sw = row.all((n) => n.attrs.role === "switch")[0];
+  assert.equal(sw.attrs["aria-checked"], "true", "on by default");
+  assert.ok(!row.className.includes("is-kept"));
+  const sure = rows.find((r) => r.textContent.includes("Eru Waaka"));
+  assert.equal(app.all(sure, "maybe-pill").length, 0, "a sure name has no badge");
+  assert.deepEqual(app.all(app.$("marks"), "is-maybe").map((m) => m.textContent), ["Zephyrine"], "dashed underline only on the possible name");
+  assert.ok(!app.$("redacted").textContent.includes("Zephyrine"), "it is removed from the redacted copy");
+  assert.match(app.$("redacted").textContent, /\[NAME_1\].*\[NAME_2\]/);
+  sw.fire("click");   // switching it off leaves it in the text
+  assert.ok(app.$("redacted").textContent.includes("Zephyrine"));
+});
+
+test("page: Remove this too replaces every copy, lists it under Added by you, brings it back in step 3, and can be taken back out", async () => {
+  const app = loadApp();
+  const text = "Meet Plinthwick at noon. plinthwick will bring the plans. Plinthwicks is another word. Then Plinthwick leaves.";
+  await app.type(text);
+  assert.equal(app.$("remove-too").hidden, true, "no button without a selection");
+  await app.select(text, "Plinthwick");
+  assert.equal(app.$("remove-too").hidden, false, "the button appears for a selection");
+  app.$("remove-too").fire("click");
+  assert.equal(app.$("redacted").textContent, "Meet [REMOVED_1] at noon. [REMOVED_2] will bring the plans. Plinthwicks is another word. Then [REMOVED_1] leaves.");
+  assert.equal(app.$("remove-too").hidden, true, "the button goes once it is used");
+  const group = app.all(app.$("groups"), "grp").find((g) => g.textContent.includes("Added by you"));
+  assert.ok(group, "its own Added by you group");
+  assert.equal(app.all(group, "hit").length, 2, "one row for each way it is written, matching the two placeholders");
+  // Step 3: the answer with the placeholders comes back in the original wording.
+  app.$("reply").value = "Please tell [REMOVED_1] and [REMOVED_2] to bring the plans.";
+  app.$("reply").fire("input");
+  assert.equal(app.$("copy-restored").dataset.text, "Please tell Plinthwick and plinthwick to bring the plans.");
+  // It survives editing, and is dropped when the text no longer holds it.
+  await app.type(text + " More text.");
+  assert.match(app.$("redacted").textContent, /\[REMOVED_1\] at noon/);
+  await app.type("Nothing of that left here.");
+  assert.equal(app.all(app.$("groups"), "grp").filter((g) => g.textContent.includes("Added by you")).length, 0);
+  await app.type(text);
+  assert.ok(!app.$("redacted").textContent.includes("REMOVED"), "once dropped it does not come back by itself");
+  // Taking it back out.
+  await app.select(text, "Plinthwick");
+  app.$("remove-too").fire("click");
+  assert.match(app.$("redacted").textContent, /\[REMOVED_1\]/);
+  const takeOut = app.all(app.$("groups"), "take-out")[0];
+  assert.equal(takeOut.textContent, "Take back out");
+  takeOut.fire("click");
+  assert.ok(!app.$("redacted").textContent.includes("REMOVED"));
+});
+
+test("page: a selection of one letter or only spaces does not offer Remove this too", async () => {
+  const app = loadApp();
+  const text = "Some text   here";
+  await app.type(text);
+  await app.select(text, "S");
+  assert.equal(app.$("remove-too").hidden, true);
+  await app.select(text, "   ");
+  assert.equal(app.$("remove-too").hidden, true);
+});
+
+test("page: the button is in the page, hidden to start, and reachable by keyboard after the text box", () => {
+  assert.match(html, /<button type="button" class="btn btn-ink remove-too" id="remove-too" hidden>/);
+  assert.ok(html.indexOf('id="input"') < html.indexOf('id="remove-too"'), "Tab from the text box reaches it");
+  assert.match(html, /Remove this too/);
+});
+
+// ---------- version 1.1 conveniences ----------
+const clipboardNavigator = (initial = "") => {
+  const nav = { written: [], clipboard: { writeText: async (t) => { nav.written.push(t); }, readText: async () => initial } };
+  return nav;
+};
+const EX = "Sam's IRD number is 49-098-576 and he is on 021 123 4567.";
+
+test("step 3 restores as soon as text is pasted or typed, with no button to press", async () => {
+  const app = loadApp();
+  await app.type(EX);
+  app.$("reply").value = "Call [PHONE_1] about [IRD_1].";
+  app.$("reply").fire("input");
+  assert.equal(app.$("copy-restored").dataset.text, "Call 021 123 4567 about 49-098-576.");
+  assert.equal(app.$("copy-restored").disabled, false);
+});
+
+test("Paste answer reads the clipboard and restores in one move", async () => {
+  const nav = clipboardNavigator("Please ring [PHONE_1].");
+  const app = loadApp({ navigator: nav, secure: true });
+  await app.type(EX);
+  app.$("reply").value = "";
+  app.$("paste-answer").fire("click");
+  await app.wait(0);
+  assert.equal(app.$("reply").value, "Please ring [PHONE_1].");
+  assert.equal(app.$("copy-restored").dataset.text, "Please ring 021 123 4567.");
+  assert.match(app.$("restored").textContent, /021 123 4567/);
+});
+
+test("Paste answer, when the browser refuses or has no clipboard reading, focuses the box and says Press Ctrl+V to paste", async () => {
+  const refusing = clipboardNavigator();
+  refusing.clipboard.readText = async () => { throw new Error("NotAllowedError"); };
+  for (const nav of [refusing, {}]) {
+    const app = loadApp({ navigator: nav, secure: true });
+    await app.type(EX);
+    app.$("paste-answer").fire("click");
+    await app.wait(0);
+    assert.equal(app.doc.activeElement, app.$("reply"), "the answer box has focus");
+    assert.equal(app.$("paste-note").textContent, "Press Ctrl+V to paste");
+    assert.ok(app.$("announce").textContent.includes("Press Ctrl+V to paste"), "announced too");
+    app.$("reply").value = "x";
+    app.$("reply").fire("input");
+    assert.equal(app.$("paste-note").textContent, "", "the note goes once something is pasted");
+  }
+});
+
+test("peek: holding Alt on the Redacted copy step shows the originals, and releasing puts the placeholders back", async () => {
+  const nav = clipboardNavigator();
+  const app = loadApp({ navigator: nav, secure: true });
+  await app.type(EX);
+  // On step 1 Alt does nothing.
+  app.doc.activeElement = app.$("tab-check");
+  app.key("keydown", { key: "Alt" });
+  assert.equal(app.$("redacted").textContent.includes("49-098-576"), false);
+  app.key("keyup", { key: "Alt" });
+  app.$("tab-copy").fire("click");
+  assert.equal(app.$("panel-copy").hidden, false);
+  assert.match(app.$("redacted").textContent, /\[IRD_1\]/);
+  app.key("keydown", { key: "Alt" });
+  assert.ok(app.$("redacted").textContent.includes("49-098-576") && app.$("redacted").textContent.includes("021 123 4567"), "originals shown");
+  assert.ok(!/\[IRD_1\]/.test(app.$("redacted").textContent));
+  assert.equal(app.$("peek").attrs["aria-pressed"], "true");
+  // The copied text is never affected, even while peeking.
+  app.$("copy-redacted").fire("click");
+  await app.wait(0);
+  assert.equal(nav.written.length, 1);
+  assert.ok(!nav.written[0].includes("49-098-576") && /\[IRD_1\]/.test(nav.written[0]), "the copy has placeholders");
+  app.key("keyup", { key: "Alt" });
+  assert.match(app.$("redacted").textContent, /\[IRD_1\]/);
+  assert.equal(app.$("peek").attrs["aria-pressed"], "false");
+  // The window losing focus ends the peek, so it cannot stick.
+  app.key("keydown", { key: "Alt" });
+  app.windowFire("blur");
+  assert.match(app.$("redacted").textContent, /\[IRD_1\]/);
+});
+
+test("peek: the press-and-hold button works for touch, and leaving the step ends it", async () => {
+  const app = loadApp();
+  await app.type(EX);
+  app.$("tab-copy").fire("click");
+  app.$("peek").fire("pointerdown", { button: 0 });
+  assert.ok(app.$("redacted").textContent.includes("49-098-576"));
+  app.$("peek").fire("pointerup");
+  assert.match(app.$("redacted").textContent, /\[IRD_1\]/);
+  app.$("peek").fire("pointerdown", { button: 0 });
+  app.$("peek").fire("pointercancel");
+  assert.match(app.$("redacted").textContent, /\[IRD_1\]/, "a cancelled touch ends it");
+  app.$("peek").fire("pointerdown", { button: 0 });
+  app.$("tab-check").fire("click");
+  app.$("tab-copy").fire("click");
+  assert.match(app.$("redacted").textContent, /\[IRD_1\]/, "still placeholders after coming back");
+});
+
+test("Clear keeps the text for 8 seconds: Undo and Ctrl+Z bring it back, and it expires", async () => {
+  const app = loadApp();
+  await app.type(EX);
+  const sw = app.all(app.$("groups"), "hit")[0].all((n) => n.attrs.role === "switch")[0];
+  sw.fire("click");                                   // switch one finding off first, to check that comes back too
+  const before = app.$("redacted").textContent;
+  assert.equal(app.$("undo-msg").hidden, true, "nothing to undo yet");
+  app.$("clear").fire("click");
+  assert.equal(app.$("input").value, "");
+  assert.equal(app.$("undo-msg").hidden, false, "Cleared. Undo shows");
+  assert.match(html, /<span class="undo-msg" id="undo-msg" hidden>Cleared\. <button type="button" class="link-btn" id="undo"/);
+  await app.wait(7900);
+  assert.equal(app.$("undo-msg").hidden, false, "still there before 8 seconds");
+  app.key("keydown", { key: "z", ctrlKey: true });     // Ctrl+Z, even though the text box has focus
+  assert.equal(app.$("input").value, EX);
+  assert.equal(app.$("redacted").textContent, before, "the switched-off finding is still off");
+  assert.equal(app.$("undo-msg").hidden, true);
+  // The Undo button, and expiry.
+  app.$("clear").fire("click");
+  app.$("undo").fire("click");
+  assert.equal(app.$("input").value, EX);
+  app.$("clear").fire("click");
+  await app.wait(8100);
+  assert.equal(app.$("undo-msg").hidden, true, "gone after 8 seconds");
+  app.key("keydown", { key: "z", ctrlKey: true });
+  assert.equal(app.$("input").value, "", "Ctrl+Z no longer brings it back");
+});
+
+test("Clear on an empty page offers no Undo, and typing after Clear ends the Undo", async () => {
+  const app = loadApp();
+  app.$("input").value = "";
+  app.$("reply").value = "";
+  app.$("clear").fire("click");
+  assert.equal(app.$("undo-msg").hidden, true, "nothing was lost");
+  await app.type("Some text");
+  app.$("clear").fire("click");
+  assert.equal(app.$("undo-msg").hidden, false);
+  await app.type("New text");
+  assert.equal(app.$("undo-msg").hidden, true, "Ctrl+Z is left to the text box once you type again");
+});
+
+test("the Undo space is reserved in the page, so nothing moves when it shows", () => {
+  assert.match(html, /<div class="note-row" id="undo-row" role="status">/);
+  assert.match(read("app/app.css"), /\.note-row \{[^}]*min-height: 2\.5rem/);
+  assert.ok(!/\.(undo|note-row)[^{]*\{[^}]*position: *(fixed|absolute)/.test(read("app/app.css")), "not a floating toast");
+});
+
+test("copy: the button says Copied with a tick for 1.5 seconds, a status region says so, and step 2 gets its line", async () => {
+  const nav = clipboardNavigator();
+  const app = loadApp({ navigator: nav, secure: true });
+  assert.match(html, /<p class="visually-hidden" id="announce" role="status"/, "the region exists from page load");
+  await app.type(EX);
+  app.$("copy-redacted").fire("click");
+  await app.wait(0);
+  assert.equal(app.$("copy-redacted-label").textContent, "Copied");
+  assert.equal(app.$("copy-redacted-icon").attrs.href, "app/icons.svg#check");
+  assert.ok(app.$("announce").textContent.startsWith("Copied."));
+  assert.equal(app.$("copy-note").textContent, "Paste it into your AI tool, then bring the answer back to step 3.");
+  await app.wait(1400);
+  assert.equal(app.$("copy-redacted-label").textContent, "Copied", "still showing at 1.4 seconds");
+  await app.wait(150);
+  assert.equal(app.$("copy-redacted-label").textContent, "Copy redacted text");
+  assert.equal(app.$("copy-redacted-icon").attrs.href, "app/icons.svg#copy");
+  // Ctrl+Enter copies too, from inside the text box.
+  app.doc.activeElement = app.$("input");
+  app.key("keydown", { key: "Enter", ctrlKey: true });
+  await app.wait(0);
+  assert.equal(nav.written.length, 2);
+  // Editing the text takes the line away, because it no longer describes what was copied.
+  await app.type(EX + " More.");
+  assert.equal(app.$("copy-note").textContent, "");
+});
+
+test("the shortcut sheet: ? opens it, Esc closes it, focus is held inside and handed back, and typing is left alone", async () => {
+  const app = loadApp();
+  await app.type(EX);
+  const from = app.$("open-shortcuts");
+  // Not while typing in a text box.
+  app.doc.activeElement = app.$("input");
+  app.key("keydown", { key: "?" });
+  assert.equal(app.$("sheet").hidden, true, "? in the text box is just a question mark");
+  app.doc.activeElement = from;
+  const open = app.key("keydown", { key: "?" });
+  assert.equal(open.defaultPrevented, true);
+  assert.equal(app.$("sheet").hidden, false);
+  assert.ok(app.$("sheet").className.includes("is-open"));
+  assert.equal(app.doc.activeElement, app.$("sheet-close"), "focus moves into the sheet");
+  const tab = app.key("keydown", { key: "Tab" });
+  assert.equal(tab.defaultPrevented, true);
+  assert.equal(app.doc.activeElement, app.$("sheet-close"), "Tab cannot leave it");
+  app.key("keydown", { key: "Tab", shiftKey: true });
+  assert.equal(app.doc.activeElement, app.$("sheet-close"));
+  app.key("keydown", { key: "Escape" });
+  assert.ok(!app.$("sheet").className.includes("is-open"));
+  assert.equal(app.doc.activeElement, from, "focus goes back to where it was");
+  await app.wait(160);
+  assert.equal(app.$("sheet").hidden, true);
+  // The Shortcuts link opens it too, and the close button closes it.
+  from.fire("click");
+  assert.equal(app.$("sheet").hidden, false);
+  app.$("sheet-close").fire("click");
+  await app.wait(160);
+  assert.equal(app.$("sheet").hidden, true);
+});
+
+test("the shortcut sheet lists every shortcut the page has, and the animation is 150 ms of opacity and scale only", () => {
+  for (const k of ["Enter", "Z", "Alt", "?", "Esc"]) assert.ok(html.includes(`<kbd>${k}</kbd>`), k);
+  assert.match(html, /&larr;/);
+  assert.match(html, /id="open-shortcuts"/);
+  const css = read("app/app.css");
+  const sheetCss = css.split("\n").filter((l) => /^\.sheet/.test(l)).join("\n");
+  assert.match(sheetCss, /transition: opacity 150ms cubic-bezier\(\.22, 1, \.36, 1\)/);
+  assert.match(sheetCss, /transform: scale\(\.98\)/);
+  assert.match(sheetCss, /transition: transform 150ms cubic-bezier\(\.22, 1, \.36, 1\), opacity 150ms cubic-bezier\(\.22, 1, \.36, 1\)/);
+  for (const [, prop] of sheetCss.matchAll(/transition: ([a-z-]+)/g)) assert.ok(["opacity", "transform"].includes(prop), prop);
+  assert.match(css, /prefers-reduced-motion: reduce[\s\S]*transition-duration: 0s !important/);
+  assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.sheet-card \{ transform: none; \}/);
+});
+
+test("a finding switched off stays off while the text is edited, in the list and in the copy", async () => {
+  const app = loadApp();
+  await app.type(EX);
+  const row = () => app.all(app.$("groups"), "hit").find((r) => r.textContent.includes("49-098-576"));
+  row().all((n) => n.attrs.role === "switch")[0].fire("click");
+  assert.ok(app.$("redacted").textContent.includes("49-098-576"), "left in");
+  await app.type(EX + " Added a line.");
+  await app.type("A new first line. " + EX + " Added a line.");
+  assert.ok(app.$("redacted").textContent.includes("49-098-576"), "still left in after edits");
+  assert.ok(row().className.includes("is-kept"));
+  assert.equal(row().all((n) => n.attrs.role === "switch")[0].attrs["aria-checked"], "false");
+});
+
+test("Ko-fi: one footer line with a plain link, no widget or script, and the privacy lines mention it", () => {
+  assert.ok(html.includes('<p class="foot-support">Free and open source. If it saved you time, you can support my work on <a href="https://ko-fi.com/keaclip" rel="noopener noreferrer">Ko-fi</a>.</p>'));
+  assert.equal((html.match(/ko-fi/gi) || []).length, 4, "the link, its label, and the privacy line only");
+  assert.ok(!/<(script|iframe|img)[^>]*ko-fi/i.test(html) && !/ko-fi\.com\/[^"]*(widget|overlay)/i.test(html));
+  assert.ok(html.includes("The Ko-fi link opens Ko-fi's own site."));
+  assert.ok(read("README.md").includes("## Support\n\nFree and open source. If it saved you time, you can support my work on [Ko-fi](https://ko-fi.com/keaclip).\n\n## Licence"));
+  assert.match(read("README.md"), /Ko-fi link in the footer opens Ko-fi's own site/);
+});
+
+test("the security policy is exactly the one it was", () => {
+  const csp = (html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/) || [])[1];
+  assert.equal(csp, "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'");
+});
+
+test("the accuracy text keeps its warnings, shows both blind sets, and says the first set was known", () => {
+  assert.match(html, /Always read the redacted copy/);
+  assert.match(html, /What it does not catch/);
+  assert.match(html, /About a third of names/);
+  assert.match(html, /known before the work on version 1\.1 started/);
+  assert.match(html, /Set 2: <span data-eval="n-docs">30<\/span> documents about names/);
+  assert.match(read("README.md"), /known before the work on version 1\.1 started/);
+  // Each figure the page shows is filled in from app/accuracy.js, not typed in.
+  for (const k of ["names-sure", "n-recall", "n-found", "n-expected", "n-precision", "n-wrong", "n-negatives"]) assert.match(html, new RegExp(`data-eval="${k}"`), k);
+});
+
+test("the second set's measured figures are the ones on the page", () => {
+  const box = { window: {} };
+  vm.runInNewContext(read("app/accuracy.js"), box);
+  const N = box.window.NZRedactAccuracy.names;
+  assert.equal(`${N.nameHit} of ${N.nameExpected}`, "59 of 90");
+  assert.equal(Math.round(N.nameRecall * 100), 66);
+  assert.equal(Math.round(N.precision * 100), 91);
+  assert.equal(`${N.negativesKept} of ${N.negatives}`, "70 of 74");
+});
+
+test("wording: no dashes, exclamation marks or banned words in the page, README or changelog", () => {
+  const strip = (t) => t.replace(/<!--[\s\S]*?-->/g, "").replace(/<!doctype html>/i, "").replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style[\s\S]*?<\/style>/g, "").replace(/!\[/g, "[");
+  for (const f of ["index.html", "README.md", "CHANGELOG.md"]) {
+    const t = strip(read(f));
+    assert.ok(!/[–—]/.test(t), `${f}: no em or en dash`);
+    assert.ok(!t.includes("!"), `${f}: no exclamation mark`);
+    const m = t.match(/\b(seamless|seamlessly|effortless|effortlessly|easy|easily|simple|simply|powerful|streamlined?|workflows?|insights?|solutions?|leverage[sd]?|ensure[sd]?)\b/i);
+    assert.equal(m, null, `${f}: ${m && m[0]}`);
+  }
+});

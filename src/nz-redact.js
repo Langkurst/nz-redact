@@ -1,5 +1,5 @@
 /*!
-  NZ Redact 1.0.0. Finds New Zealand personal details in text and replaces them with numbered
+  NZ Redact 1.1.0. Finds New Zealand personal details in text and replaces them with numbered
   placeholders, so the text can go into an AI tool. Puts the details back into the answer afterwards.
   Plain rules: no AI, no network, no storage. MIT licence. https://github.com/Langkurst/nz-redact
 
@@ -136,9 +136,11 @@
     email: { label: "Email address", tag: "[EMAIL]", token: "EMAIL", group: "contact", priority: 5 },
     phone: { label: "Phone number", tag: "[PHONE]", token: "PHONE", group: "contact", priority: 4 },
     address: { label: "Street address", tag: "[ADDRESS]", token: "ADDRESS", group: "people", priority: 6 },
-    name: { label: "Name", tag: "[NAME]", token: "NAME", group: "people", priority: 3 }
+    name: { label: "Name", tag: "[NAME]", token: "NAME", group: "people", priority: 3 },
+    // Text the person chose to remove themselves. The rules never find it; scan() adds it when asked.
+    added: { label: "Added by you", tag: "[REMOVED]", token: "REMOVED", group: "added", priority: 10 }
   };
-  var GROUPS = { id: "Identity numbers", money: "Money", contact: "Contact details", people: "Names and addresses" };
+  var GROUPS = { id: "Identity numbers", money: "Money", contact: "Contact details", people: "Names and addresses", added: "Added by you" };
 
   function each(re, text, fn) {
     re.lastIndex = 0;
@@ -305,10 +307,200 @@
     }
   ];
 
+  // ---------- possible names (the lower-confidence tier) ----------
+  // A list of given names common in New Zealand, written from general knowledge of who lives here: English
+  // and European, Maori, Samoan, Tongan and other Pacific, Chinese, Indian, Korean, Filipino and others.
+  // Stored without macrons and in lower case; the lookup does the same to the text.
+  var FIRST_NAMES = (
+    "james john robert michael william david richard joseph thomas charles christopher daniel matthew anthony mark donald steven paul andrew joshua kenneth kevin brian george timothy ronald edward jason jeffrey ryan jacob gary nicholas eric jonathan stephen larry justin scott brandon benjamin samuel gregory alexander patrick frank raymond jack dennis jerry tyler aaron adam nathan henry peter zachary douglas harold kyle walter ethan jeremy carl keith roger gerald christian terry sean arthur austin noah lawrence jesse joe bryan billy bruce albert gabriel logan alan wayne roy ralph randy eugene vincent russell elijah louis bobby philip johnny " +
+    "mary patricia jennifer linda elizabeth barbara susan jessica sarah karen lisa nancy betty margaret sandra ashley kimberly emily donna michelle carol amanda dorothy melissa deborah stephanie rebecca sharon laura cynthia kathleen amy angela shirley anna brenda pamela emma nicole helen samantha katherine christine debra rachel carolyn janet catherine maria heather diane ruth julie olivia joyce virginia kelly lauren christina joan evelyn judith megan andrea cheryl hannah jacqueline martha gloria teresa ann sara madison frances kathryn janice jean abigail alice judy sophia grace denise amber doris marilyn danielle beverly isabella theresa diana natalie brittany charlotte marie kayla alexis lori " +
+    "jane anne sam bex ben tim tom jo jen kate katie liz beth jess steph nic nick chris matt dan dave mike pete rob andy tony hamish angus fraser callum ewan lachlan murray graeme grant glen trevor kerry shane craig darren brent rhys bryce kirsty kirsten tracey tracy sheryl raewyn lynette lyn lynley bronwyn robyn jocelyn sue wendy gail glenys maureen noeline noelene colleen dianne leanne jenny jenna kylie nikki tania tanya tammy vicki vikki belinda melanie naomi georgia holly isla mia ella ava chloe zoe harper lucy lily ruby sophie amelia evie millie poppy matilda tessa hayley jemma jade freya imogen indi piper stella willow maddison paige shelley sonia stacey toni trish vanessa yvonne zara " +
+    "oliver leo lucas liam hunter finn jayden mason cooper archie hugo oscar felix max theo harry charlie freddie toby jake josh luke cameron connor blake dylan jordan riley hayden mitchell brad brett clint curtis dean doug gavin gordon ian ivan jeff jim jimmy kurt lloyd neil nigel norman owen phil ray rex rod ross rupert simon stuart ted vaughan warren wesley alistair bernard clive colin dwayne errol gareth garth graham greg howard ken kieran leon malcolm marcus martin maurice melvin miles noel oliver pat dennis ronnie rusty seth spencer stan todd tristan victor wade xavier " +
+    "aroha hemi rangi wiremu tane hine kahu nikau mere hone rawiri tipene ngaire hana hinemoa huia ihaka kiri mahina maia manaia manu matiu maui miriama moana ngaio nikora paora pita rahera rangimarie rewi riki rina ripeka tamati tamihana tamara tawhiri tiaki tiana timoti wikitoria hirini ihipera kahurangi anaru hoani heeni rihari pare aroha atawhai awhina eruera hohepa hoana irihapeti kaea kereama mihaere mereana meri ngahuia parekura poihipi rawinia reremoana rihi rongo tahu taika tama tamahou tomairangi tuhoe wairua waimarie whetu wi " +
+    "sione losa tasi ioane tevita siosaia mele lupe malia leilani sefa pele talia vaea lagi sina fiona filipo alofa tomasi semisi viliami saia sitiveni lesieli seini litia mosese soane taniela folau ofa tupou aleki leota alesana tusi lili vaiola maka petelo tavita iosefa ruta epeli apisai josefa seru sera mereani losana vilimaina fetu faleolo masina mafi toa fia lemalu fuimaono tofilau ioana setu sefo mataio sifa tuala ana vili manase pita soifua " +
+    "wei ming jing hui yan xin lei hong mei ling hua fang xiao lin tao jie yong ying yang jian wen kai hao jia xue ping qing rui ting zhen mingyu xiaoming jiahui weiwei yuki hiro kenji akira takeshi haruto yuna sakura mika " +
+    "arjun priya raj rahul amit anil sunil vijay sanjay rohan rohit vikram ravi ramesh suresh mahesh deepak ashok rajesh manoj nikhil nitin pooja neha anjali sunita anita kavita sangeeta meera geeta sita lakshmi divya shreya ananya aditya aarav vivek varun kunal gaurav harpreet gurpreet manpreet jaspreet simran navneet jasdeep amandeep balwinder paramjit harjit gurdeep kuljit sukhdev ranjit tejinder mandeep rajinder parminder kiran asha usha rekha seema shweta swati mohan krishna ganesh hari dinesh mukesh naveen prakash satish venkat srinivas vishal yash farhan imran ahmed ali omar mohammed muhammad hassan hussein fatima ayesha aisha zainab khalid tariq bilal yusuf ibrahim sana nadia layla samira " +
+    "minjun jiwoo seung hyun jin soo eun joon jisoo junho sungmin jiyeon hyejin haeun seoyeon taehyung dongwoo " +
+    "jose juan rosa carlos miguel luis pedro ramon ricardo eduardo mariel jasmine angelica kristine josephine rowena divina lorna imelda corazon cristina jericho jeremiah " +
+    "pieter johan hendrik willem marek piotr tomasz krzysztof olga natasha dmitri sergei vladimir pavel mateusz luca marco matteo giovanni paolo sofia giulia francesca hans klaus stefan lars erik anders ingrid astrid pierre claire amelie camille mathieu antoine jorge pablo diego javier alejandro carmen lucia isabel ahmad mehmet ayse nikolai elena katarina tatiana yuri boris gregor andrzej magda " +
+    // Words that are also names. They only count with a surname after them, or in a phrase such as "spoke to".
+    "will may bill hope rose summer june april august faith joy don jan dawn ivy iris daisy violet sky rich sandy chase bob art coral crystal pearl olive penny cliff christian"
+  ).split(/\s+/);
+  var AMBIGUOUS = "will may bill hope rose summer june april august faith joy grace frank mark pat don jan dawn ivy iris daisy violet amber jade sky rich sandy chase bob art coral crystal pearl olive penny cliff christian hunter mason ray dean earl holly ruby lily poppy willow stella piper max miles noel sue rex rod rusty seth wade major".split(" ");
+
+  // Words that are never part of a possible name: places, months, days, Maori words common in NZ English,
+  // organisations, and everyday words that start a sentence or name a role.
+  var STOP_WORDS = (
+    // places: cities, towns, regions, and Auckland, Wellington and Christchurch suburbs
+    "auckland wellington christchurch hamilton tauranga dunedin napier hastings palmerston north south east west central nelson rotorua whangarei invercargill whanganui wanganui gisborne new plymouth timaru masterton levin taupo queenstown blenheim oamaru greymouth westport hokitika kaitaia kerikeri paihia whitianga thames tairua coromandel waihi paeroa matamata morrinsville cambridge awamutu otorohanga taumarunui tokoroa putaruru whakatane opotiki kawerau wairoa dannevirke woodville pahiatua feilding marton bulls otaki paraparaumu waikanae porirua upper lower hutt petone lyttelton kaikoura hanmer ashburton rangiora kaiapoi rolleston lincoln methven geraldine twizel wanaka cromwell alexandra arrowtown gore balclutha mosgiel stewart island bluff riverton anau milford franz josef fox glacier akaroa waiheke great barrier kapiti wairarapa northland waikato taranaki manawatu horowhenua otago southland canterbury marlborough tasman westland bay plenty coast cape reinga zealand australia sydney melbourne brisbane perth adelaide canberra fiji samoa tonga india china korea japan england scotland wales ireland london " +
+    "ponsonby parnell remuera epsom eden newmarket grey lynn mount albert roskill onehunga ellerslie penrose otahuhu papatoetoe manukau manurewa papakura takanini pukekohe botany howick pakuranga panmure innes mission kohimarama orakei glendowie heliers birkenhead takapuna devonport northcote glenfield albany browns orewa whangaparaoa silverdale henderson titirangi avondale blockhouse point chevalier herne freemans grafton kingsland sandringham mangere otara flat ranui massey westgate hobsonville kumeu helensville warkworth wellsford waiuku " +
+    "kelburn karori newtown kilbirnie miramar lyall johnsonville tawa khandallah ngaio brooklyn thorndon aro victoria cuba courtenay oriental seatoun eastbourne naenae taita wainuiomata stokes valley avalon silverstream trentham " +
+    "riccarton fendalton merivale papanui sydenham addington linwood sumner brighton halswell hornby burnside ilam albans spreydon cashmere opawa woolston " +
+    // months and days
+    "january february march jun jul aug sep sept oct nov dec jan feb mar apr monday tuesday wednesday thursday friday saturday sunday mon tue tues wed thu thur thurs fri sat sun " +
+    // Maori words common in New Zealand English
+    "matariki aotearoa whanau kia ora kaitiaki hui marae mihi tangi iwi hapu korero koha pakeha kai mahi haka waka ako tamariki rangatahi tena koe nga haere mai kaha pai te reo maori whare taonga whenua awa maunga wai whatu kapa kohanga ka " +
+    // organisations
+    "ird acc kiwibank anz asb bnz westpac countdown woolworths pak'nsave paknsave spark one nz vodafone 2degrees skinny bp mobil warehouse bunnings mitre10 fonterra xero myob google microsoft amazon apple facebook instagram zoom teams slack gmail outlook winz msd work income health police customs immigration ministry education housing plunket starship kiwisaver kiwirail studylink westfield aa nzta mpi ird's acc's ird acc inland revenue hnz pharmac bupa ryman " +
+    // everyday words that start sentences or name roles
+    "the this that these those there then thank thanks please can could would should is are was were has have had do does did i we you he she it they my our your his her their and but or so if when while where what who why how as at in on of to for from by with not no yes ok hi hello dear cheers regards kind best sent subject cc date re fw fwd note notes ref order item total amount invoice payment refund tax account accounts bank phone mobile email address name customer client patient student staff manager team office home work school hospital clinic pharmacy council department reception payroll support admin sales service services meeting appointment visit call mum dad nana koro aunty uncle sir madam mr mrs ms miss dr mx all everyone folks guys both again morning afternoon evening landlord tenant parent teacher doctor nurse supplier boss director owner member members applicant applicants referee contact caller employee employer family friend friends some any each every other another here now today tomorrow yesterday also just only still very much more most many few little last next first second third final urgent update reminder hey kia sorry attached see let ring text emailed rang called wants asked said says tel ph mob dob nhi ird tax code form claim policy quote rate rates year years week weeks day days hour hours minutes time times on-site site store shop cafe street road avenue place lane drive crescent terrace way close court grove parade highway quay rise square mews esplanade boulevard glade heights track row st rd ave pl ln dr cres tce hwy ct apt unit flat " +
+    "details information section figure table appendix page chapter below above attached commissioner minister mayor prime president chair chairperson chairman spokesperson judge officer constable sergeant inspector principal coach captain government company committee board court tribunal union authority agency provider centre center group branch head headquarters hq iwi trust department division unit sector industry customer customers clients users people person someone anyone nobody everybody somebody management finance legal compliance security operations marketing technology digital data system systems project projects programme program plan plans report reports budget budgets contract contracts lease leases mt lake port fort saint"
+  ).split(/\s+/);
+  var STOP = Object.create(null), FIRST = Object.create(null), AMB = Object.create(null);
+  STOP_WORDS.forEach(function (w) { STOP[w] = true; });
+  FIRST_NAMES.forEach(function (w) { FIRST[w] = true; });
+  AMBIGUOUS.forEach(function (w) { AMB[w] = true; FIRST[w] = true; });
+
+  var LETTER = "A-Za-zÀ-ɏ";
+  var STRONG_BEFORE = ["spoke to", "talked to", "talk to", "spoken to", "speak to", "ask", "asked", "tell", "told", "cc", "cc'd", "called", "call", "rang", "ring", "emailed", "texted", "messaged", "met", "thanks", "thank you", "thanks to", "ping", "pass to", "give to", "send to", "sent to", "forward to"];
+  var WEAK_BEFORE = ["with", "for", "from", "by", "behalf of", "regarding"];
+  var SPEECH_AFTER = ["said", "says", "rang", "called", "emailed", "asked", "wants", "texted", "replied", "mentioned", "confirmed", "messaged", "told", "wrote", "reckons"];
+  var VERB_AFTER = SPEECH_AFTER.concat(["is", "has", "was", "will", "can", "would", "could", "works", "started", "starts", "left", "sent", "rings", "calls", "emails", "thinks", "lives", "arrives", "arrived"]);
+  var STREET_WORDS = new RegExp("^" + STREET + "$", "i");
+  var CAP_START = /^[A-ZÀ-ÞĀ-ſ]/;
+
+  function lookup(w) {
+    return w.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+  function tokenise(text) {
+    var toks = [], re = new RegExp("[" + LETTER + "]+(?:['’-][" + LETTER + "]+)*", "g"), m;
+    while ((m = re.exec(text))) {
+      var w = m[0], end = m.index + w.length;
+      var poss = /^(.{2,}?)['’]s$/i.exec(w);                      // Sam's gives Sam
+      if (poss) { w = poss[1]; end = m.index + w.length; }
+      toks.push({
+        w: w, s: m.index, e: end, key: lookup(w),
+        cap: CAP_START.test(w),
+        mixed: CAP_START.test(w) && /[a-zß-ÿāēīōū]/.test(w)   // a capital, but not ALL CAPITALS
+      });
+    }
+    return toks;
+  }
+  function sentenceStart(text, at) {
+    var i = at - 1;
+    while (i >= 0 && /[ \t"'(*•>\-]/.test(text[i])) i--;
+    return i < 0 || text[i] === "\n" || /[.!?:]/.test(text[i]);
+  }
+  function lineStart(text, at) {
+    var i = at - 1;
+    while (i >= 0 && /[ \t"'(*•>\-]/.test(text[i])) i--;
+    return i < 0 || text[i] === "\n";
+  }
+
+  function possibleNames(text, out) {
+    var toks = tokenise(text);
+    var added = {};
+    function gap(i) { return i + 1 < toks.length ? text.slice(toks[i].e, toks[i + 1].s) : null; }
+    function adj(i) { return gap(i) === " " ? toks[i + 1] : null; }
+    function surnameLike(t) {
+      return !!t && t.mixed && t.w.length >= 2 && !STOP[t.key] && !AMB[t.key] && !STREET_WORDS.test(t.w);
+    }
+    function wordsBefore(i, n) {                                          // the n words before token i, when they run straight on from it
+      var p = [];
+      for (var k = i - 1; k >= 0 && p.length < n; k--) {
+        if (gap(k) !== " ") break;
+        p.unshift(toks[k].key);
+      }
+      return p;
+    }
+    function push(a, b, why) {                                            // tokens a to b inclusive
+      var start = toks[a].s, end = toks[b].e, key = start + ":" + end;
+      if (added[key]) return;
+      var value = text.slice(start, end);
+      var next = adj(b);
+      if (next && (STREET_WORDS.test(next.w) || BUSINESS.test(next.w))) return;     // Victoria Street, Grace Dental
+      if (BUSINESS.test(value)) return;
+      var prev = a > 0 && gap(a - 1) === " " ? toks[a - 1] : null;
+      if (prev && /^(mt|mount|lake|port|fort|saint|st|cape|new|north|south|east|west|upper|lower|te)$/.test(prev.key)) return;
+      added[key] = true;
+      out.push({ type: "name", maybe: true, start: start, end: end, text: value, why: why });
+    }
+    function spanFrom(i) {                                                // a name from token i, plus a following surname-like word
+      var n = adj(i);
+      if (!surnameLike(n)) return i;
+      var n2 = adj(i + 1);
+      if (FIRST[n.key] && surnameLike(n2)) return i + 2;                  // a middle name
+      return i + 1;
+    }
+    function nameWord(t) { return t.mixed && t.w.length >= 3 && !/['’](?:ve|ll|d|m|re|t)$/i.test(t.w) && (!STOP[t.key] || !!AMB[t.key]); }
+
+    toks.forEach(function (t, i) {
+      if (!t.mixed) return;
+      var amb = !!AMB[t.key], known = !!FIRST[t.key];
+      var ss = sentenceStart(text, t.s);
+
+      // 1. A known given name, with a surname after it when there is one.
+      if (known && (!STOP[t.key] || amb)) {
+        var last = spanFrom(i);
+        if (last > i) push(i, last, amb ? "a name that is also a word, followed by a surname-like word" : "a common first name followed by a surname-like word");
+        else if (!amb) {
+          var nx = adj(i);
+          if (!ss) push(i, i, "a common first name");
+          else if (nx && VERB_AFTER.indexOf(nx.key) !== -1) push(i, i, "a common first name followed by a verb such as said or is");
+        }
+      }
+
+      // 2. A name after phrases such as spoke to, ask, cc, with, for, from; or before said, rang, emailed.
+      if (nameWord(t)) {
+        var one = wordsBefore(i, 1)[0], two = wordsBefore(i, 2).join(" ");
+        var strong = STRONG_BEFORE.indexOf(one) !== -1 || STRONG_BEFORE.indexOf(two) !== -1;
+        var weak = WEAK_BEFORE.indexOf(one) !== -1 || WEAK_BEFORE.indexOf(two) !== -1;
+        var end2 = spanFrom(i);
+        if (strong) push(i, end2, "a name after a phrase such as spoke to or ask");
+        else if (weak && end2 > i) push(i, end2, "two capitalised words after with, for or from");
+        var after = adj(end2);
+        if (after) {
+          var third = adj(end2 + 1), isOff = after.key === "is" && third && third.key === "off", hasBeen = after.key === "has" && third && third.key === "been";
+          if (SPEECH_AFTER.indexOf(after.key) !== -1 || isOff || hasBeen) push(i, end2, "a name followed by a word such as said, rang or emailed");
+        }
+      }
+    });
+
+    // 3. An initial and a surname: B. Thompson.
+    each(/(?<![A-Za-z])([A-Z])\. ?([A-Z][A-Za-zāēīōū'’-]{2,})/g, text, function (m) {
+      var sur = m[2], k = lookup(sur);
+      if (STOP[k] || AMB[k] || STREET_WORDS.test(sur) || !/[a-z]/.test(sur) || lineStart(text, m.index)) return;
+      var key = m.index + ":" + (m.index + m[0].length);
+      if (added[key]) return;
+      added[key] = true;
+      out.push({ type: "name", maybe: true, start: m.index, end: m.index + m[0].length, text: m[0], why: "an initial followed by a surname-like word" });
+    });
+
+    // 4. A first name at the start of a chat line: "jess: whats the number".
+    each(/(?:^|\n)[ \t]*([A-Za-z]{2,12}):[ \t]/g, text, function (m) {
+      var k = lookup(m[1]);
+      if (!FIRST[k] || AMB[k] || STOP[k]) return;
+      var start = m.index + m[0].indexOf(m[1]);
+      out.push({ type: "name", maybe: true, start: start, end: start + m[1].length, text: m[1], why: "a first name at the start of a chat line" });
+    });
+  }
+
+  // 5. The same name again: once a name is found, other copies of it in the text are very likely the same person.
+  function repeatedNames(text, found, out) {
+    var seen = {};
+    found.forEach(function (f) {
+      if (f.type !== "name") return;
+      var words = f.text.replace(/^(?:Dr|Mr|Mrs|Ms|Miss|Mx)\.? /, "").split(" ").filter(function (w) { return !/^[A-Z]\.$/.test(w); });
+      var parts = words.length > 1 ? [words.join(" ")].concat(words) : words;
+      parts.forEach(function (p) {
+        var k = lookup(p);
+        if (seen[p] || p.length < 3 || !CAP_START.test(p) || /[\d.]/.test(p)) return;
+        if (STOP[k] || AMB[k] || STREET_WORDS.test(p)) return;
+        seen[p] = true;
+        var single = p.indexOf(" ") === -1;
+        var re = new RegExp("(?<![" + LETTER + "'’-])" + p.replace(/[.*+?^${}()|[\]\\]/g, "\\  // Keep the strongest match where two overlap") + "(?![" + LETTER + "-])", "g");
+        each(re, text, function (m) {
+          if (single && !FIRST[k] && sentenceStart(text, m.index)) return;       // a surname that is also a word, opening a sentence
+          out.push({ type: "name", maybe: true, start: m.index, end: m.index + p.length, text: p, why: "the same name appears elsewhere" });
+        });
+      });
+    });
+  }
+
   // Keep the strongest match where two overlap: higher priority first, then the longer match.
   function resolve(found) {
     found.sort(function (a, b) {
-      return (TYPES[b.type].priority - TYPES[a.type].priority) || ((b.end - b.start) - (a.end - a.start)) || (a.start - b.start);
+      return ((TYPES[b.type].priority - (b.maybe ? 0.5 : 0)) - (TYPES[a.type].priority - (a.maybe ? 0.5 : 0))) || ((b.end - b.start) - (a.end - a.start)) || (a.start - b.start);
     });
     var kept = [];
     found.forEach(function (f) {
@@ -318,11 +510,34 @@
     return kept.sort(function (a, b) { return a.start - b.start; });
   }
 
-  /* scan(text, {types}) -> findings. types: list of type keys to look for (default: all). */
+  /* Every whole-word copy of each value the person chose, ignoring capitals. */
+  function addedFindings(text, values, out) {
+    (values || []).forEach(function (v) {
+      v = String(v).trim();
+      if (!v) return;
+      var pattern = v.split(/\s+/).map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("\\s+");
+      var re = new RegExp("(?<![" + LETTER + "0-9_])" + pattern + "(?![" + LETTER + "0-9_])", "gi");
+      each(re, text, function (m) {
+        out.push({ type: "added", start: m.index, end: m.index + m[0].length, text: m[0], why: "text you chose to remove" });
+      });
+    });
+  }
+
+  /* scan(text, {types, maybe, added}) -> findings.
+     types: list of type keys to look for (default: all the rules).
+     maybe: false leaves out the possible names (findings with maybe: true). They are included by default.
+     added: text the person chose to remove; every whole-word copy of it comes back as type "added". */
   function scan(text, options) {
-    var wanted = (options && options.types) || Object.keys(TYPES);
+    options = options || {};
+    text = String(text);
+    var wanted = options.types || Object.keys(TYPES);
     var found = [];
-    DETECTORS.forEach(function (detect) { detect(String(text), found); });
+    DETECTORS.forEach(function (detect) { detect(text, found); });
+    if (options.maybe !== false) {
+      possibleNames(text, found);
+      repeatedNames(text, resolve(found.filter(function (f) { return f.type === "name"; })), found);
+    }
+    addedFindings(text, options.added, found);
     return resolve(found.filter(function (f) { return wanted.indexOf(f.type) !== -1; })).map(function (f) {
       f.label = TYPES[f.type].label;
       return f;
@@ -340,7 +555,8 @@
   }
 
 
-  function sameValue(f) { return f.type + ":" + f.text.replace(/[\s\-()]/g, "").toLowerCase(); }
+  // The same value gets the same placeholder. Text the person added keeps its capitals, so it comes back as written.
+  function sameValue(f) { return f.type === "added" ? "added:" + f.text : f.type + ":" + f.text.replace(/[\s\-()]/g, "").toLowerCase(); }
 
   /* redact(text, findings) -> {text, map, items}
      Each detail becomes a numbered placeholder such as [IRD_1]. The same value always gets the same
@@ -375,7 +591,7 @@
   }
 
   return {
-    version: "1.0.0",
+    version: "1.1.0",
     TYPES: TYPES,
     irdIsValid: irdIsValid,
     nhiIsValid: nhiIsValid,

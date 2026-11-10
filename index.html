@@ -49,11 +49,13 @@
     </div>
   </header>
 
+  <p class="visually-hidden" id="announce" role="status" aria-live="polite"></p>
+
   <main id="main">
     <section class="hero frame" aria-labelledby="hero-h">
       <p class="kicker"><span class="dot" aria-hidden="true"></span>Free and open source. Runs on your device.</p>
       <h1 id="hero-h">Take the personal details out before it goes into AI.</h1>
-      <p class="lede">Paste an email, a note or a spreadsheet. NZ Redact swaps IRD, NHI, bank, card, licence and passport numbers, phone numbers, emails, dates of birth, street addresses and labelled names for placeholders such as <code class="ph">[IRD_1]</code>. When the AI answers, paste the answer back and the real details return.</p>
+      <p class="lede">Paste an email, a note or a spreadsheet. NZ Redact swaps IRD, NHI, bank, card, licence and passport numbers, phone numbers, emails, dates of birth, street addresses and people's names for placeholders such as <code class="ph">[IRD_1]</code>. When the AI answers, paste the answer back and the real details return.</p>
       <ul class="assure" aria-label="Why you can trust it">
         <li><svg class="i"><use href="app/icons.svg#wifi-off"/></svg><span><strong>Nothing is sent.</strong> The page is blocked from connecting to anything, and works offline.</span></li>
         <li><svg class="i"><use href="app/icons.svg#shield-check"/></svg><span><strong>Real checks.</strong> IRD, NHI and bank numbers must pass their official check digit.</span></li>
@@ -74,7 +76,7 @@
           <div class="bar-end">
             <span class="pill" id="status" role="status">Nothing yet</span>
             <button type="button" class="btn btn-ink" id="copy-redacted" disabled aria-keyshortcuts="Control+Enter">
-              <svg class="i"><use href="app/icons.svg#copy"/></svg><span class="label">Copy redacted text</span><kbd class="kbd" aria-hidden="true">Ctrl ↵</kbd>
+              <svg class="i"><use id="copy-redacted-icon" href="app/icons.svg#copy"/></svg><span class="label" id="copy-redacted-label">Copy redacted text</span><kbd class="kbd" aria-hidden="true">Ctrl ↵</kbd>
             </button>
           </div>
         </div>
@@ -95,24 +97,36 @@
                 <div class="editor-backdrop" aria-hidden="true"><div class="editor-marks" id="marks"></div></div>
                 <label class="visually-hidden" for="input">Text to check</label>
                 <textarea class="editor-input" id="input" spellcheck="false" placeholder="Paste text here, or drop a .txt or .csv file. Nothing leaves this page."></textarea>
+                <button type="button" class="btn btn-ink remove-too" id="remove-too" hidden><svg class="i"><use href="app/icons.svg#eye-off"/></svg><span>Remove this too</span></button>
                 <div class="drop" id="drop" aria-hidden="true"><svg class="i"><use href="app/icons.svg#file-up"/></svg><span>Drop a .txt or .csv file to check it</span></div>
+              </div>
+              <div class="note-row" id="undo-row" role="status">
+                <span class="undo-msg" id="undo-msg" hidden>Cleared. <button type="button" class="link-btn" id="undo" aria-keyshortcuts="Control+Z">Undo</button></span>
               </div>
             </div>
 
             <div class="panel" id="panel-copy" role="tabpanel" aria-labelledby="tab-copy" hidden>
-              <div class="panel-head"><span class="label-mono">Redacted copy, ready for the AI</span></div>
+              <div class="panel-head">
+                <span class="label-mono">Redacted copy, ready for the AI</span>
+                <button type="button" class="btn btn-ghost" id="peek" aria-pressed="false" aria-keyshortcuts="Alt"><svg class="i"><use id="peek-icon" href="app/icons.svg#eye"/></svg><span id="peek-label">Show originals</span></button>
+              </div>
               <div class="doc" id="redacted" tabindex="0"></div>
+              <div class="note-row note-stack"><p class="peek-hint">Hold Alt, or press and hold Show originals, to see the real details. The copied text is not changed.</p><p class="copy-note" id="copy-note"></p></div>
             </div>
 
             <div class="panel" id="panel-back" role="tabpanel" aria-labelledby="tab-back" hidden>
-              <div class="panel-head"><span class="label-mono">The AI's answer</span></div>
+              <div class="panel-head">
+                <span class="label-mono">The AI's answer</span>
+                <button type="button" class="btn btn-ghost" id="paste-answer"><svg class="i"><use href="app/icons.svg#clipboard-paste"/></svg><span>Paste answer</span></button>
+              </div>
               <div class="editor editor-plain">
                 <label class="visually-hidden" for="reply">The AI's answer, with placeholders such as [IRD_1]</label>
                 <textarea class="editor-input" id="reply" spellcheck="false" placeholder="Paste the AI's answer. Placeholders such as [IRD_1] turn back into the real details."></textarea>
               </div>
+              <div class="note-row" id="paste-note-row" role="status"><span id="paste-note"></span></div>
               <div class="panel-head panel-head-split">
                 <span class="label-mono">With the real details</span>
-                <button type="button" class="btn" id="copy-restored" disabled><svg class="i"><use href="app/icons.svg#copy"/></svg><span class="label">Copy</span></button>
+                <button type="button" class="btn" id="copy-restored" disabled><svg class="i"><use id="copy-restored-icon" href="app/icons.svg#copy"/></svg><span class="label" id="copy-restored-label">Copy</span></button>
               </div>
               <div class="doc" id="restored" tabindex="0"></div>
             </div>
@@ -122,14 +136,14 @@
             <div class="side-top">
               <h2 id="found-h" class="label-mono">Found</h2>
               <p class="big-count"><span id="count">0</span><span class="big-unit" id="count-unit">details</span></p>
-              <p class="side-hint">Switch one off to leave it in the text.</p>
+              <p class="side-hint">Switch one off to leave it in the text. Something missed? Select it in your text and choose Remove this too.</p>
             </div>
             <div id="groups"></div>
           </aside>
         </div>
 
         <div class="app-foot">
-          <span id="chars">0 characters</span>
+          <span class="foot-left"><span id="chars">0 characters</span><button type="button" class="link-btn" id="open-shortcuts" aria-haspopup="dialog" aria-keyshortcuts="Shift+/">Shortcuts</button></span>
           <span class="foot-lock"><svg class="i"><use href="app/icons.svg#lock"/></svg>Processed on this device. The placeholder list is forgotten when you close the tab.</span>
         </div>
       </section>
@@ -167,7 +181,7 @@
             <tr><th scope="row">Email address</th><td>Any email address</td><td><code>sam@example.co.nz</code></td></tr>
             <tr><th scope="row">Phone number</th><td>NZ mobiles, landlines, 0800 and +64 numbers</td><td><code>021 123 4567</code></td></tr>
             <tr><th scope="row">Street address</th><td>A number, a street name and a street type, with suburb, city and postcode</td><td><code>56 Hinemoa Street, Birkenhead</code></td></tr>
-            <tr><th scope="row">Name</th><td>After a label such as Name, Patient or Dear, in a name column, or signing off a message</td><td><code>Patient: Eru Waaka</code></td></tr>
+            <tr><th scope="row">Name</th><td>After a label such as Name, Patient or Dear, in a name column, or signing off a message. Other likely names are marked Possible.</td><td><code>Patient: Eru Waaka</code></td></tr>
           </tbody>
         </table>
       </div>
@@ -176,26 +190,40 @@
     <section class="section frame" id="accuracy" aria-labelledby="acc-h">
       <div class="section-head">
         <p class="label-mono">Accuracy</p>
-        <h2 id="acc-h">Tested blind on <span data-eval="docs">30</span> NZ documents</h2>
-        <p class="section-lede">Emails, payroll notes, spreadsheet rows and support tickets, written and marked up by hand by someone who could not see the rules, after the rules were finished. These are the results as measured, including what it misses.</p>
+        <h2 id="acc-h">Tested blind on two sets of <span data-eval="docs">30</span> NZ documents</h2>
+        <p class="section-lede">Both sets were written and marked up by hand by someone who could not see the rules: emails, payroll notes, spreadsheet rows and support tickets. These are the results as measured, including what it misses.</p>
       </div>
+
+      <h3 class="acc-set">Set 1: the original <span data-eval="docs">30</span> documents</h3>
       <div class="acc-grid">
         <div class="stat"><p class="stat-n" data-eval="structured">0%</p><p class="stat-l">of numbers, dates, emails, phones and addresses found</p></div>
-        <div class="stat stat-warn"><p class="stat-n" data-eval="names">0%</p><p class="stat-l">of people's names found. Names need your own read through.</p></div>
+        <div class="stat stat-warn"><p class="stat-n" data-eval="names">0%</p><p class="stat-l">of people's names found with possible names, up from <span data-eval="names-sure">0%</span> in version 1.0</p></div>
         <div class="stat"><p class="stat-n" data-eval="precision">0%</p><p class="stat-l">of what it removed was a real detail</p></div>
         <div class="stat"><p class="stat-n" data-eval="negatives">0</p><p class="stat-l">look-alikes left alone, such as order numbers and wrong check digits</p></div>
       </div>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Accuracy by kind of detail">
+
+      <h3 class="acc-set">Set 2: <span data-eval="n-docs">30</span> documents about names, written for version 1.1</h3>
+      <div class="acc-grid acc-grid-3">
+        <div class="stat stat-warn"><p class="stat-n" data-eval="n-recall">0%</p><p class="stat-l"><span data-eval="n-found">0</span> of <span data-eval="n-expected">0</span> people's names found</p></div>
+        <div class="stat"><p class="stat-n" data-eval="n-precision">0%</p><p class="stat-l">of the names it removed were real names (<span data-eval="n-wrong">0</span> were not)</p></div>
+        <div class="stat"><p class="stat-n" data-eval="n-negatives">0</p><p class="stat-l">look-alike words left alone, such as places, months, and words like Will and May</p></div>
+      </div>
+
+      <p class="acc-note">A name marked <strong>Possible</strong> is a guess from the word itself, for example a common first name in a sentence. It is switched on, and you can switch it off.</p>
+      <p class="acc-note">The results for the first set were known before the work on version 1.1 started. The rules were not tuned on its documents, but that is why the second set was written. It was made after the 1.1 rules were finished, by someone who had not seen them, and it contains no numbers, emails or addresses, only names and look-alike words.</p>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Set 1 accuracy by kind of detail">
         <table class="spec" id="acc-table">
+          <caption class="acc-cap">Set 1, by kind of detail</caption>
           <thead><tr><th scope="col">Detail</th><th scope="col" class="n">In the documents</th><th scope="col" class="n">Found</th><th scope="col" class="n">Missed</th><th scope="col" class="n">False alarms</th></tr></thead>
           <tbody id="acc-rows"></tbody>
         </table>
       </div>
-      <p class="acc-note">While the rules were being built, a separate set of <span data-eval="main-docs">80</span> documents was used to find gaps. On that set it found <span data-eval="main-structured">0%</span> of numbers, dates, emails, phones and addresses, and <span data-eval="main-names">0%</span> of names. Both sets are in the repository, and <code>npm run eval</code> measures them again.</p>
+      <p class="acc-note">While the rules were being built, a separate set of <span data-eval="main-docs">80</span> documents was used to find gaps. On that set it found <span data-eval="main-structured">0%</span> of numbers, dates, emails, phones and addresses, and <span data-eval="main-names">0%</span> of names. All three sets are in the repository, and <code>npm run eval</code> measures them again.</p>
       <div class="limits">
         <h3>What it does not catch</h3>
         <ul>
-          <li>Most names written in ordinary sentences. It finds names after a label such as Name, Patient or Dear, and in a name column. Read the redacted copy before you paste it.</li>
+          <li>About a third of names. Most names are now found, but the ones missed are mostly names in ordinary sentences that are not common first names. Always read the redacted copy before you paste it, and use Remove this too for anything it missed.</li>
           <li>Health details, such as a diagnosis written in words.</li>
           <li>Numbers split across lines, or written in words.</li>
           <li>Company GST numbers and company bank accounts use the same check digits as personal ones, so they are removed too. That is on purpose: removing too much is safer than too little.</li>
@@ -221,9 +249,28 @@ const { text: answer } = NZRedact.restore(aiReply, map);</code></pre>
   <footer class="foot">
     <div class="frame foot-inner">
       <p>Made by Christopher Nottle in Auckland. MIT licence.</p>
-      <p><a href="https://github.com/Langkurst/nz-redact">Source on GitHub</a> <span aria-hidden="true">·</span> <a href="https://github.com/Langkurst/nz-redact/issues">Report a problem</a> <span aria-hidden="true">·</span> No cookies, no tracking. <span id="version"></span></p>
+      <p><a href="https://github.com/Langkurst/nz-redact">Source on GitHub</a> <span aria-hidden="true">·</span> <a href="https://github.com/Langkurst/nz-redact/issues">Report a problem</a> <span aria-hidden="true">·</span> No cookies, no tracking. The Ko-fi link opens Ko-fi's own site. <span id="version"></span></p>
+      <p class="foot-support">Free and open source. If it saved you time, you can support my work on <a href="https://ko-fi.com/keaclip" rel="noopener noreferrer">Ko-fi</a>.</p>
     </div>
   </footer>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-card" id="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-h" tabindex="-1">
+      <div class="sheet-head">
+        <h2 id="sheet-h">Keyboard shortcuts</h2>
+        <button type="button" class="icon-btn" id="sheet-close" aria-label="Close shortcuts"><svg class="i"><use href="app/icons.svg#x"/></svg></button>
+      </div>
+      <dl class="keys">
+        <div><dt><kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>Copy the redacted text. Works while you type.</dd></div>
+        <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Undo Clear, while "Cleared. Undo" shows under the text.</dd></div>
+        <div><dt><kbd>Alt</kbd> hold</dt><dd>On the Redacted copy step, show the original details in place of the placeholders.</dd></div>
+        <div><dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>Move between the three steps when a step tab is selected.</dd></div>
+        <div><dt><kbd>?</kbd></dt><dd>Open this list. It does not work while you type in a text box.</dd></div>
+        <div><dt><kbd>Esc</kbd></dt><dd>Close this list, or the Remove this too button.</dd></div>
+      </dl>
+      <p class="sheet-note">On a Mac, use Cmd in place of Ctrl.</p>
+    </div>
+  </div>
 
   <script src="src/nz-redact.js"></script>
   <script src="app/accuracy.js"></script>

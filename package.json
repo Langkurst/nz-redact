@@ -1,7 +1,7 @@
 {
   "name": "nz-redact",
-  "version": "1.0.0",
-  "description": "Find New Zealand personal details in text (IRD, NHI, bank, card, licence, passport, phone, email, date of birth, address, labelled names) and swap them for placeholders before using AI. Put them back afterwards.",
+  "version": "1.1.0",
+  "description": "Find New Zealand personal details in text (IRD, NHI, bank, card, licence, passport, phone, email, date of birth, address, names) and swap them for placeholders before using AI. Put them back afterwards.",
   "main": "src/nz-redact.js",
   "files": ["src/nz-redact.js", "LICENSE", "README.md"],
   "scripts": {

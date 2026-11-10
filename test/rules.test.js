@@ -100,19 +100,19 @@ const SAMPLE = [
 ].join("\n");
 
 test("finds each kind of detail in a realistic note, once each", () => {
-  const found = P.scan(SAMPLE);
+  const found = P.scan(SAMPLE, { maybe: false });   // the possible names (here Sam) have their own tests below
   assert.deepEqual(found.map((f) => f.type), ["ird", "nhi", "bank", "phone", "phone", "email", "licence", "passport", "dob", "card"]);
   assert.deepEqual(found.map((f) => f.text), ["49-098-576", "ZAA0067", "01-0902-0068389-00", "021 123 4567", "(09) 123 4567", "sam.example@example.co.nz", "AB123456", "LA654321", "12/03/1985", "4111 1111 1111 1111"]);
   for (const f of found) assert.ok(f.why && f.label, "every finding says why");
 });
 
 test("the cleaned copy keeps the wording and removes every detail", () => {
-  const found = P.scan(SAMPLE);
+  const found = P.scan(SAMPLE, { maybe: false });
   const cleaned = P.clean(SAMPLE, found);
   for (const f of found) assert.ok(!cleaned.includes(f.text), `${f.text} still present`);
   assert.match(cleaned, /IRD \[IRD NUMBER\], NHI \[NHI NUMBER\], pay to \[BANK ACCOUNT\]\./);
   assert.match(cleaned, /^Hi team, can you update Sam's file before Friday\?/);
-  assert.equal(P.scan(cleaned).length, 0, "nothing left to find");
+  assert.equal(P.scan(cleaned, { maybe: false }).length, 0, "nothing left to find");
 });
 
 test("phone formats people actually write", () => {
@@ -244,4 +244,146 @@ test("two-column spreadsheet rows count, but a sentence with a comma is not a he
   const got = (t) => P.scan(t).map((f) => f.type + ":" + f.text);
   assert.deepEqual(got("name,dob\nAroha,01/02/1990\n"), ["name:Aroha", "dob:01/02/1990"]);
   assert.deepEqual(got("Name, please call back.\nThanks, Bob"), []);
+});
+
+// ---------- possible names (the lower-confidence tier) ----------
+// Most tests use names that are not in the rules' list (Zephyrine, Quillon, Orla Quigley), so they prove the
+// phrase rule itself and not the list.
+const maybeNames = (t, o) => P.scan(t, o).filter((f) => f.type === "name" && f.maybe).map((f) => f.text);
+
+test("possible names carry maybe: true and a reason; sure names do not; maybe: false leaves them out", () => {
+  const text = "Name: Eru Waaka\nCan you ask Priya to ring back?";
+  const found = P.scan(text).filter((f) => f.type === "name");
+  assert.deepEqual(found.map((f) => [f.text, !!f.maybe]), [["Eru Waaka", false], ["Priya", true]]);
+  assert.ok(found.every((f) => f.why && f.label === "Name"));
+  assert.deepEqual(P.scan(text, { maybe: false }).filter((f) => f.type === "name").map((f) => f.text), ["Eru Waaka"]);
+});
+
+test("possible names: a known first name in the middle of a sentence, with a surname when there is one", () => {
+  assert.deepEqual(maybeNames("Can you tell the team that Priya has finished?"), ["Priya"]);
+  assert.deepEqual(maybeNames("The report from Sam Taylor arrived."), ["Sam Taylor"]);
+  assert.deepEqual(maybeNames("Please update Sam's refund."), ["Sam"], "the 's is left outside");
+  assert.deepEqual(maybeNames("Please update Sam Taylor’s refund."), ["Sam Taylor"]);
+  assert.deepEqual(maybeNames("Sent by Mary Jane Walker today."), ["Mary Jane Walker"], "a middle name");
+});
+
+test("possible names: the first word of a sentence counts only with a surname or a verb after it", () => {
+  assert.deepEqual(maybeNames("Priya said the van is ready."), ["Priya"]);
+  assert.deepEqual(maybeNames("Priya Nair is off today."), ["Priya Nair"]);
+  assert.deepEqual(maybeNames("Priya went home early."), [], "a bare name opening a sentence is left alone");
+});
+
+test("possible names: a capitalised word after spoke to, ask, cc and similar, even if the name is not in the list", () => {
+  assert.deepEqual(maybeNames("I spoke to Zephyrine yesterday."), ["Zephyrine"]);
+  assert.deepEqual(maybeNames("Please ask Zephyrine Quillon about it."), ["Zephyrine Quillon"]);
+  assert.deepEqual(maybeNames("cc Zephyrine on the reply"), ["Zephyrine"]);
+});
+
+test("possible names: a capitalised word before said, rang, emailed, is off or has been", () => {
+  assert.deepEqual(maybeNames("Quillon said the van is ready."), ["Quillon"]);
+  assert.deepEqual(maybeNames("Then Quillon rang twice."), ["Quillon"]);
+  assert.deepEqual(maybeNames("Quillon is off today."), ["Quillon"]);
+  assert.deepEqual(maybeNames("Quillon has been away."), ["Quillon"]);
+  assert.deepEqual(maybeNames("Quillon went away."), [], "an ordinary verb is not a signal");
+});
+
+test("possible names: with, for and from need two capitalised words, not one", () => {
+  assert.deepEqual(maybeNames("The invoice for Orla Quigley is late."), ["Orla Quigley"]);
+  assert.deepEqual(maybeNames("Apologies from Orla Quigley."), ["Orla Quigley"]);
+  assert.deepEqual(maybeNames("The invoice for Quigley is late."), [], "one unknown word after for is not enough");
+  assert.deepEqual(maybeNames("The invoice for Friday is late."), []);
+});
+
+test("possible names: an initial and a surname, but not a list heading", () => {
+  assert.deepEqual(maybeNames("Entered by R. Singh on the day."), ["R. Singh"]);
+  assert.deepEqual(maybeNames("Notes\nA. Overview of the plan"), [], "a heading at the start of a line");
+});
+
+test("possible names: a first name at the start of a chat line", () => {
+  assert.deepEqual(maybeNames("jess: whats the number\ntom: ta"), ["jess", "tom"]);
+  assert.deepEqual(maybeNames("note: remember the milk"), [], "a word that is not a first name");
+});
+
+test("possible names: once a name is found, other copies of it are found too", () => {
+  const text = "Spoke to Zephyrine Quillon today. Then I saw Quillon again, and Zephyrine's dog.";
+  assert.deepEqual(maybeNames(text), ["Zephyrine Quillon", "Quillon", "Zephyrine"]);
+  assert.equal(P.scan(text).filter((f) => f.why === "the same name appears elsewhere").length, 2);
+  assert.deepEqual(maybeNames("Spoke to Zephyrine today. QuillonZephyrine is not a copy, nor is Zephyrines."), ["Zephyrine"]);
+});
+
+test("possible names: a surname that is also a word is not copied when it opens a sentence", () => {
+  const f = P.scan("Patient: Ellis Young\nYoung people were there. Later Ellis Young left.").filter((x) => x.type === "name");
+  assert.deepEqual(f.map((x) => x.text), ["Ellis Young", "Ellis Young"], "Young people is not a copy");
+});
+
+test("possible names: places, months, days, Maori words and organisations are not names", () => {
+  for (const t of ["I spoke to Wellington about it.", "Please ask Tauranga to confirm.", "We rang Auckland twice.", "Then Hamilton said no.", "Spoke to Monday and Friday.",
+    "Ask Matariki to come.", "Thanks Kiwibank for that.", "Please cc Fonterra and ANZ.", "Tell Westpac we rang.", "Spark said it was fine."]) {
+    assert.deepEqual(maybeNames(t), [], t);
+  }
+  assert.deepEqual(maybeNames("Meet in Wellington on Friday. The Hamilton office is shut."), []);
+});
+
+test("possible names: everyday words and roles are not names", () => {
+  for (const t of ["The Commissioner said no.", "Please ask Reception to ring.", "Tell Accounts we rang.", "Ask Payroll today.", "See details for Section Two."]) {
+    assert.deepEqual(maybeNames(t), [], t);
+  }
+});
+
+test("possible names: names that are also words need a surname or a speech phrase", () => {
+  assert.deepEqual(maybeNames("Meet in Wellington on Friday. Will you send it today? Due in May 2026. There is a grace period."), []);
+  assert.deepEqual(maybeNames("Let us mark the date. Hope to see you. Send it by August or June."), []);
+  assert.deepEqual(maybeNames("Due in May 2026 and again in June 2027, per Mark."), []);
+  assert.deepEqual(maybeNames("The note from Grace Harper arrived."), ["Grace Harper"]);
+  assert.deepEqual(maybeNames("Please ask Grace about it."), ["Grace"]);
+  assert.deepEqual(maybeNames("Will Harper said it was fine."), ["Will Harper"]);
+  assert.deepEqual(maybeNames("Spoke to Will yesterday."), ["Will"]);
+});
+
+test("possible names: a street, a company or a place prefix next to a first name is not a person", () => {
+  assert.deepEqual(maybeNames("Turn left at Murray Street."), [], "Murray Street");
+  assert.deepEqual(maybeNames("Book Murray Dental for Friday."), [], "Murray Dental");
+  assert.deepEqual(maybeNames("We walked up Mt Murray."), [], "Mt Murray");
+  assert.deepEqual(maybeNames("I walked by Murray today."), ["Murray"], "the same name on its own is still found");
+});
+
+test("possible names: a contraction is not a name", () => {
+  assert.deepEqual(maybeNames("I've said it twice and we've rang."), []);
+});
+
+test("possible names: a sure finding wins where they overlap, and an address or email wins over a name", () => {
+  assert.deepEqual(P.scan("Patient: Sam Taylor").filter((f) => f.type === "name").map((f) => !!f.maybe), [false]);
+  assert.deepEqual(types("Lives at 12 Murray Street, Takapuna"), ["address"]);
+  assert.deepEqual(types("Email sam.taylor@example.co.nz now"), ["email"]);
+});
+
+// ---------- text the person adds ----------
+test("added text: every whole-word copy is found, ignoring capitals, and nothing inside other words", () => {
+  const text = "Acme won. acme lost. ACME drew. Acmegrove stays. The Acme-Co bid is separate. No, Acme Co.";
+  const found = P.scan(text, { added: ["Acme"] }).filter((f) => f.type === "added");
+  assert.deepEqual(found.map((f) => f.text), ["Acme", "acme", "ACME", "Acme", "Acme"]);
+  assert.ok(found.every((f) => f.label === "Added by you" && f.why));
+  assert.deepEqual(P.scan("Samuel and Sampson", { added: ["Sam"] }).filter((f) => f.type === "added"), []);
+  assert.deepEqual(P.scan("anything", { added: ["  ", ""] }).filter((f) => f.type === "added"), []);
+});
+
+test("added text: values with punctuation and spaces are matched literally", () => {
+  const found = P.scan("Ask (R&D) about the Q1.5   plan, and the q1.5 plan.", { added: ["(R&D)", "Q1.5   plan"] }).filter((f) => f.type === "added");
+  assert.deepEqual(found.map((f) => f.text), ["(R&D)", "Q1.5   plan", "q1.5 plan"]);
+});
+
+test("added text: redacts to [REMOVED_n] and comes back exactly as written", () => {
+  const text = "Tell Zorbo about Zorbo and zorbo, then Plinth.";
+  const found = P.scan(text, { added: ["Zorbo", "Plinth"] });
+  const r = P.redact(text, found);
+  assert.equal(r.text, "Tell [REMOVED_1] about [REMOVED_1] and [REMOVED_2], then [REMOVED_3].", "capitals differ, so zorbo has its own placeholder");
+  assert.equal(P.restore(r.text, r.map).text, text);
+  assert.equal(P.TYPES.added.label, "Added by you");
+  assert.equal(P.TYPES.added.token, "REMOVED");
+});
+
+test("added text wins over a rule that finds the same words, and is left out when types are limited", () => {
+  const text = "Phone 021 123 4567 now.";
+  assert.deepEqual(P.scan(text, { added: ["021 123 4567"] }).map((f) => f.type), ["added"]);
+  assert.deepEqual(P.scan(text, { added: ["now"], types: ["phone"] }).map((f) => f.type), ["phone"]);
 });
