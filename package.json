@@ -9,7 +9,7 @@
     "eval": "node scripts/eval.js"
   },
   "keywords": ["new-zealand", "nz", "privacy", "redaction", "pii", "ird", "nhi", "anonymise", "ai"],
-  "author": "Christopher Nottle",
+  "author": "Langkurst",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/Langkurst/nz-redact.git" },
   "bugs": { "url": "https://github.com/Langkurst/nz-redact/issues" },
